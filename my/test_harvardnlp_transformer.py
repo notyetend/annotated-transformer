@@ -57,11 +57,11 @@ def data_gen(V, batch, nbatches, max_words_in_sentence):
 
     >>> b0.src.shape  # (5, 4)
     """
-    for i in range(nbatches):
+    for _ in range(nbatches):
         data = torch.from_numpy(np.random.randint(low=1, high=V, size=(batch, max_words_in_sentence)))
         data[:, 0] = 1  # 1 for first column
-        src = Variable(data, requires_grad=False)
-        tgt = Variable(data, requires_grad=False)
+        src = Variable(data, requires_grad=False).type(torch.long)
+        tgt = Variable(data, requires_grad=False).type(torch.long)
         yield Batch(src, tgt, 0)
 
 
@@ -266,3 +266,8 @@ class MyEncoder(nn.Module):
         return self.norm(x)
 
 ##############################
+
+
+el = MyEncoderLayer(d_model, dropout_rate, num_head, hidden_size_pff)
+encoder = MyEncoder(el, 2)
+encoder.forward(o_pe, batch0.src_mask)  # [5, 4, 12]

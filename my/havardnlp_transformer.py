@@ -35,7 +35,11 @@ class EncoderDecoder(nn.Module):
 
 
 class Generator(nn.Module):
-    """Define standard linear + softmax generation step."""
+    """
+    Define standard linear + softmax generation step.
+
+    ???
+    """
 
     def __init__(self, d_model, vocab):
         super(Generator, self).__init__()
@@ -66,7 +70,13 @@ class Encoder(nn.Module):
 
 
 class LayerNorm(nn.Module):
-    """Construct a layernorm module (See citation for details)."""
+    """
+    Construct a layernorm module (See citation for details).
+
+    ln = LayerNorm(10)
+    x = torch.tensor([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]).type(torch.float)
+    ln.forward(x)
+    """
 
     def __init__(self, features, eps=1e-6):
         super(LayerNorm, self).__init__()
@@ -197,7 +207,23 @@ def subsequent_mask(size):
 
 
 def attention(query, key, value, mask=None, dropout=None):
-    """Compute 'Scaled Dot Product Attention'"""
+    """
+    Compute 'Scaled Dot Product Attention'
+
+    max_words_in_sentence = 4  # of words in each sentence
+    batch_size = 5  # of sentences
+    size_dict = 7  # size of word dictionary
+    d_model = 12
+    hidden_size_pff = 11
+    num_head = 2
+    dropout_rate = 0.1
+    num_encoder_layer = 2
+
+    query.shape: [5, 2, 4, 6]
+        6 = 12/2, d_model/num_head
+        4 = 5-1,  # of sentences - 1
+        2 =
+    """
     d_k = query.size(-1)
     scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
     if mask is not None:
@@ -238,7 +264,7 @@ class MultiHeadedAttention(nn.Module):
             mask = mask.unsqueeze(1)
 
         nbatches = query.size(0)
-
+        
         # 1) Do all the linear projections in batch from d_model => h x d_k
         query, key, value = \
             [l(x).view(nbatches, -1, self.h, self.d_k).transpose(1, 2)

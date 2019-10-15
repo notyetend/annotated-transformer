@@ -2,15 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8572b878-1277-4d06-9269-94a65f8d2b8c" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/my_transformer.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/my_traf.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/havardnlp_transformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/havardnlp_transformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test_harvardnlp_transformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_harvardnlp_transformer.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -19,20 +11,29 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/my_traf$test_harvardnlp_transformer.coverage" NAME="test_harvardnlp_transformer Coverage Results" MODIFIED="1571052393095" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/my_traf$test_harvardnlp_transformer.coverage" NAME="test_harvardnlp_transformer Coverage Results" MODIFIED="1571137675876" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.45337245">
+    <splitter split-orientation="horizontal" split-proportion="0.5443196">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/havardnlp_transformer.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="303">
-                  <caret line="266" column="8" selection-start-line="266" selection-start-column="8" selection-end-line="266" selection-end-column="8" />
+                <state relative-caret-position="389">
+                  <caret line="236" column="39" lean-forward="true" selection-start-line="236" selection-start-column="39" selection-end-line="236" selection-end-column="39" />
                   <folding>
                     <element signature="e#27#38#0" expanded="true" />
                   </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://C:/Anaconda3/Lib/site-packages/torch/nn/modules/module.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="200">
+                  <caret line="521" selection-start-line="521" selection-end-line="521" />
                 </state>
               </provider>
             </entry>
@@ -44,8 +45,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/havardnlp_transformer.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="346">
-                  <caret line="224" column="11" selection-start-line="224" selection-start-column="11" selection-end-line="224" selection-end-column="11" />
+                <state relative-caret-position="58">
+                  <caret line="270" selection-start-line="270" selection-end-line="275" selection-end-column="43" />
                   <folding>
                     <element signature="e#27#38#0" expanded="true" />
                   </folding>
@@ -83,7 +84,7 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="1">
+  <component name="ProjectFrameBounds">
     <option name="width" value="1920" />
     <option name="height" value="1200" />
   </component>
@@ -111,7 +112,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -206,24 +207,24 @@
       <workItem from="1571046639362" duration="2490000" />
       <workItem from="1571049926589" duration="1158000" />
       <workItem from="1571051113111" duration="658000" />
-      <workItem from="1571051985927" duration="1056000" />
+      <workItem from="1571051985927" duration="6643000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="6082000" />
+    <option name="totallyTimeSpent" value="11669000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1200" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.0844086" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.13870968" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="bottom" id="Run" order="2" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.415547" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.39731285" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -249,8 +250,8 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/havardnlp_transformer.py</url>
-          <line>268</line>
-          <option name="timeStamp" value="2" />
+          <line>235</line>
+          <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -294,10 +295,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://C:/Anaconda3/Lib/site-packages/torch/nn/modules/module.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="200">
+          <caret line="521" selection-start-line="521" selection-end-line="521" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/havardnlp_transformer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="303">
-          <caret line="266" column="8" selection-start-line="266" selection-start-column="8" selection-end-line="266" selection-end-column="8" />
+        <state relative-caret-position="389">
+          <caret line="236" column="39" lean-forward="true" selection-start-line="236" selection-start-column="39" selection-end-line="236" selection-end-column="39" />
           <folding>
             <element signature="e#27#38#0" expanded="true" />
           </folding>

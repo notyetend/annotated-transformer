@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8572b878-1277-4d06-9269-94a65f8d2b8c" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/havardnlp_transformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/havardnlp_transformer.py" afterDir="false" />
-    </list>
+    <list default="true" id="8572b878-1277-4d06-9269-94a65f8d2b8c" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,8 +18,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/havardnlp_transformer.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="389">
-                  <caret line="236" column="39" lean-forward="true" selection-start-line="236" selection-start-column="39" selection-end-line="236" selection-end-column="39" />
+                <state relative-caret-position="421">
+                  <caret line="241" column="27" lean-forward="true" selection-start-line="241" selection-start-column="27" selection-end-line="241" selection-end-column="27" />
                   <folding>
                     <element signature="e#27#38#0" expanded="true" />
                   </folding>
@@ -46,7 +44,7 @@
             <entry file="file://$PROJECT_DIR$/havardnlp_transformer.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="58">
-                  <caret line="270" selection-start-line="270" selection-end-line="275" selection-end-column="43" />
+                  <caret line="273" selection-start-line="273" selection-end-line="278" selection-end-column="43" />
                   <folding>
                     <element signature="e#27#38#0" expanded="true" />
                   </folding>
@@ -207,16 +205,15 @@
       <workItem from="1571046639362" duration="2490000" />
       <workItem from="1571049926589" duration="1158000" />
       <workItem from="1571051113111" duration="658000" />
-      <workItem from="1571051985927" duration="6643000" />
+      <workItem from="1571051985927" duration="7480000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="11669000" />
+    <option name="totallyTimeSpent" value="12506000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1200" extended-state="0" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.13870968" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -250,7 +247,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/havardnlp_transformer.py</url>
-          <line>235</line>
+          <line>238</line>
           <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>
@@ -304,8 +301,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/havardnlp_transformer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="389">
-          <caret line="236" column="39" lean-forward="true" selection-start-line="236" selection-start-column="39" selection-end-line="236" selection-end-column="39" />
+        <state relative-caret-position="421">
+          <caret line="241" column="27" lean-forward="true" selection-start-line="241" selection-start-column="27" selection-end-line="241" selection-end-column="27" />
           <folding>
             <element signature="e#27#38#0" expanded="true" />
           </folding>

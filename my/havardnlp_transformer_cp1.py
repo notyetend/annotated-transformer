@@ -369,6 +369,8 @@ def make_model(src_vocab, tgt_vocab, N=6, d_model=512, d_ff=2048, h=8, dropout=0
             nn.init.xavier_uniform_(p)  # fixed by kdw
     return model
 
+# MODEL PARTS END ############################################################################
+
 
 class Batch:
     """Object for holding a batch of data with mask during training."""
@@ -377,11 +379,21 @@ class Batch:
         self.src = src
         self.src_mask = (src != pad).unsqueeze(-2)
         """
-        >>> trg = src = torch.tensor([[1, 2, 3, 2],
-                                     [1, 2, 1, 4],
-                                     [1, 2, 4, 5],
-                                     [1, 1, 2, 1],
-                                     [1, 2, 5, 5]])  # [5, 4]
+        >>> src = torch.tensor([[1, 2, 3, 2],
+                                [1, 2, 1, 4],
+                                [1, 2, 4, 5],
+                                [1, 1, 2, 1],
+                                [1, 2, 5, 5]])  # [5, 4]
+        >>> trg = torch.tensor([[1, 2, 3],
+                                [1, 2, 1],
+                                [1, 2, 4],
+                                [1, 1, 2],
+                                [1, 2, 5]])  # [5, 3]
+        >>> trg_y = torch.tensor([ [2, 3, 2],
+                                   [2, 1, 4],
+                                   [2, 4, 5],
+                                   [1, 2, 1],
+                                   [2, 5, 5]])  # [5, 3]
         >>> pad = 0
         
         >>> src.unsqueeze(0).shape   # (1, 5, 10)
@@ -393,7 +405,7 @@ class Batch:
             self.trg = trg[:, :-1]  # without last column, why???
             self.trg_y = trg[:, 1:]  # without first column, why???
             self.trg_mask = self.make_std_mask(self.trg, pad)
-            self.ntokens = (self.trg_y != pad).data.sum()  # where this used for???
+            self.ntokens = (self.trg_y != pad).data.sum()  # where this used for? -> to compute loss
 
     @staticmethod
     def make_std_mask(tgt, pad):

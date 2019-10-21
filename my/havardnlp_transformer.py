@@ -232,7 +232,7 @@ def attention(q_w_q, k_w_k, v_w_v, mask=None, dropout=None):
         -> this mask shape will be extended as shape of scores, scores's shape is [5, 2, 4, 4]
 
     scores.masked_fill(mask == 0, -1e9)
-        -> create new tensor with scores having original value if mask != 0 and having -1e9 if mask == 0.
+        -> create new tensor with scores having original value if mask != 0 otherwise having -1e9 if mask == 0.
     """
     d_k = q_w_q.size(-1)
     scores = torch.matmul(q_w_q, k_w_k.transpose(-2, -1)) / math.sqrt(d_k)
@@ -313,6 +313,15 @@ class MultiHeadedAttention(nn.Module):
         x, self.attn = attention(q_w_q, k_w_k, v_w_v, mask=mask, dropout=self.dropout)
 
         # 3) "Concat" using a view and apply a final linear.
+        """
+        shape of x: [5, 2, 4, 6]  -> last two dim represent one sentence.
+                 x.transpose(1, 2): [5, 4, 2, 6] -> last two dim represent attentions(multiple heads) of one word.
+                 x.transpose(1, 2).contiguous().view(nbatches, -1, self.h * self.d_k): [5, 4, 12]
+                    -> concatenating attentions into one.
+                    
+        self.linears[-1](x) -> concat(head1, head2, ...) dot W^O
+            shape of W^O: d_model times d_K
+        """
         x = x.transpose(1, 2).contiguous().view(nbatches, -1, self.h * self.d_k)
         return self.linears[-1](x)
 

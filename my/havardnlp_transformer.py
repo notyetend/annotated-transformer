@@ -35,7 +35,11 @@ class EncoderDecoder(nn.Module):
 
 
 class Generator(nn.Module):
-    """Define standard linear + softmax generation step."""
+    """
+    Define standard linear + softmax generation step.
+
+    ???
+    """
 
     def __init__(self, d_model, vocab):
         super(Generator, self).__init__()
@@ -66,7 +70,13 @@ class Encoder(nn.Module):
 
 
 class LayerNorm(nn.Module):
-    """Construct a layernorm module (See citation for details)."""
+    """
+    Construct a layernorm module (See citation for details).
+
+    ln = LayerNorm(10)
+    x = torch.tensor([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]).type(torch.float)
+    ln.forward(x)
+    """
 
     def __init__(self, features, eps=1e-6):
         super(LayerNorm, self).__init__()
@@ -196,16 +206,42 @@ def subsequent_mask(size):
     return torch.from_numpy(subsequent_mask) == 0
 
 
-def attention(query, key, value, mask=None, dropout=None):
-    """Compute 'Scaled Dot Product Attention'"""
-    d_k = query.size(-1)
-    scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
+def attention(q_w_q, k_w_k, v_w_v, mask=None, dropout=None):
+    """
+    Compute 'Scaled Dot Product Attention'
+
+    With settings
+        d_model = 12
+        num of word in sentence = 4
+        num of sentences = nbatches = 5
+        num of heads = self.h = 2
+        self.d_k = d_model / self.h = 6
+
+    shape of q_w_q, k_w_k, v_w_v: [5, 2, 4, 6]
+        -> last dim is 6 because we divided d_model by num heads. (12/6)
+        -> [num sentences, heads, num words, word info 'for this head']
+
+    torch.matmul(q_w_q, k_w_k.transpose(-2, -1)) / math.sqrt(d_k)
+        -> attention(QW^Q, KW^K, VW^V) = softmax( {QW^Q dot (KW^K)^T} / sqrt(d_k)} ) dot VW^V
+        -> eq (1) of original paper
+
+    shape of scores = torch.matmul(q_w_q, k_w_k.transpose(-2, -1)): [5, 2, 4, 4]
+        -> dot product of [5, 2, 4, 6] and [5, 2, 6, 4]
+
+    shape of mask: [5, 1, 1, 4]
+        -> this mask shape will be extended as shape of scores, scores's shape is [5, 2, 4, 4]
+
+    scores.masked_fill(mask == 0, -1e9)
+        -> create new tensor with scores having original value if mask != 0 otherwise having -1e9 if mask == 0.
+    """
+    d_k = q_w_q.size(-1)
+    scores = torch.matmul(q_w_q, k_w_k.transpose(-2, -1)) / math.sqrt(d_k)
     if mask is not None:
         scores = scores.masked_fill(mask == 0, -1e9)  # Fills elements of tensor with value where mask is one.
     p_attn = F.softmax(scores, dim=-1)
     if dropout is not None:
         p_attn = dropout(p_attn)
-    return torch.matmul(p_attn, value), p_attn
+    return torch.matmul(p_attn, v_w_v), p_attn
 
 
 class MultiHeadedAttention(nn.Module):
@@ -232,7 +268,36 @@ class MultiHeadedAttention(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, query, key, value, mask=None):
-        """Implements Figure 2"""
+        """
+        Implements Figure 2
+
+        With settings
+            d_model = 12
+            num of word in sentence = 4
+            num of sentences = nbatches = 5
+            num of heads = self.h = 2
+            self.d_k = d_model / self.h = 6
+
+        shape of query: [5, 4, 12]
+        shape of key:   [5, 4, 12]
+        shape of value: [5, 4, 12]
+
+        shape of w_q, w_k, w_v: [12, 12]
+
+        shape of    self.linears[0](query): [5, 4, 12]
+                    self.linears[1](key)  : [5, 4, 12]
+                    self.linears[2](value): [5, 4, 12]
+
+        ※ view function is similar to reshape of numpy
+
+        shape of self.linears[0](query).view(5, -1, 2, 6): [5, 4, 2, 6]
+         -> splitting last dim into 2
+
+        shape of q_w_q = self.linears[0](query).view(5, -1, 2, 6).transpose(1, 2): [5, 2, 4, 6]
+                 k_w_k = self.linears[1](key  ).view(5, -1, 2, 6).transpose(1, 2): [5, 2, 4, 6]
+                 v_w_v = self.linears[2](value).view(5, -1, 2, 6).transpose(1, 2): [5, 2, 4, 6]
+         -> exchanging 1st and 2nd dim to ... ??? why???
+        """
         if mask is not None:
             # Same mask applied to all h heads.
             mask = mask.unsqueeze(1)
@@ -240,14 +305,23 @@ class MultiHeadedAttention(nn.Module):
         nbatches = query.size(0)
 
         # 1) Do all the linear projections in batch from d_model => h x d_k
-        query, key, value = \
+        q_w_q, k_w_k, v_w_v = \
             [l(x).view(nbatches, -1, self.h, self.d_k).transpose(1, 2)
              for l, x in zip(self.linears, (query, key, value))]
 
         # 2) Apply attention on all the projected vectors in batch.
-        x, self.attn = attention(query, key, value, mask=mask, dropout=self.dropout)
+        x, self.attn = attention(q_w_q, k_w_k, v_w_v, mask=mask, dropout=self.dropout)
 
         # 3) "Concat" using a view and apply a final linear.
+        """
+        shape of x: [5, 2, 4, 6]  -> last two dim represent one sentence.
+                 x.transpose(1, 2): [5, 4, 2, 6] -> last two dim represent attentions(multiple heads) of one word.
+                 x.transpose(1, 2).contiguous().view(nbatches, -1, self.h * self.d_k): [5, 4, 12]
+                    -> concatenating attentions into one.
+                    
+        self.linears[-1](x) -> concat(head1, head2, ...) dot W^O
+            shape of W^O: d_model times d_K
+        """
         x = x.transpose(1, 2).contiguous().view(nbatches, -1, self.h * self.d_k)
         return self.linears[-1](x)
 

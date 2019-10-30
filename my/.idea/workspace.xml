@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8572b878-1277-4d06-9269-94a65f8d2b8c" name="Default Changelist" comment="" />
+    <list default="true" id="7278965f-781b-4300-a61d-f9b1badab209" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -9,29 +9,51 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/my_traf$test_harvardnlp_transformer.coverage" NAME="test_harvardnlp_transformer Coverage Results" MODIFIED="1571137675876" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/my_transformer$test_harvardnlp_transformer_cp1.coverage" NAME="test_harvardnlp_transformer_cp1 Coverage Results" MODIFIED="1571420678820" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+  <component name="FUSProjectUsageTrigger">
+    <session id="-1883824497">
+      <usages-collector id="statistics.lifecycle.project">
+        <counts>
+          <entry key="project.closed" value="2" />
+          <entry key="project.open.time.0" value="2" />
+          <entry key="project.opened" value="2" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.extensions.open">
+        <counts>
+          <entry key="py" value="9" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.types.open">
+        <counts>
+          <entry key="Python" value="9" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.extensions.edit">
+        <counts>
+          <entry key="Python Console" value="368" />
+          <entry key="py" value="552" />
+          <entry key="txt" value="12" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.types.edit">
+        <counts>
+          <entry key="PLAIN_TEXT" value="12" />
+          <entry key="Python" value="920" />
+        </counts>
+      </usages-collector>
+    </session>
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.5443196">
+    <splitter split-orientation="horizontal" split-proportion="0.43821248">
       <split-first>
-        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+        <leaf>
           <file pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/havardnlp_transformer.py">
+            <entry file="file://$PROJECT_DIR$/havardnlp_transformer_cp1.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="421">
-                  <caret line="241" column="27" lean-forward="true" selection-start-line="241" selection-start-column="27" selection-end-line="241" selection-end-column="27" />
-                  <folding>
-                    <element signature="e#27#38#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file pinned="false" current-in-tab="false">
-            <entry file="file://C:/Anaconda3/Lib/site-packages/torch/nn/modules/module.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="200">
-                  <caret line="521" selection-start-line="521" selection-end-line="521" />
+                <state relative-caret-position="432">
+                  <caret line="573" column="31" selection-start-line="573" selection-start-column="25" selection-end-line="573" selection-end-column="31" />
                 </state>
               </provider>
             </entry>
@@ -39,24 +61,24 @@
         </leaf>
       </split-first>
       <split-second>
-        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+        <leaf>
           <file pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/havardnlp_transformer.py">
+            <entry file="file://$PROJECT_DIR$/test_harvardnlp_transformer_cp1.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="58">
-                  <caret line="273" selection-start-line="273" selection-end-line="278" selection-end-column="43" />
+                <state relative-caret-position="214">
+                  <caret line="83" selection-start-line="83" selection-end-line="83" />
                   <folding>
-                    <element signature="e#27#38#0" expanded="true" />
+                    <marker date="1571420678815" expanded="true" signature="123:124" ph="..." />
                   </folding>
                 </state>
               </provider>
             </entry>
           </file>
           <file pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/test_harvardnlp_transformer.py">
+            <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/modules/module.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="255">
-                  <caret line="122" selection-start-line="122" selection-end-line="129" selection-end-column="21" />
+                <state relative-caret-position="223">
+                  <caret line="869" column="8" selection-start-line="869" selection-start-column="8" selection-end-line="869" selection-end-column="8" />
                 </state>
               </provider>
             </entry>
@@ -67,8 +89,9 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>layernorm</find>
-      <find>attention(</find>
+      <find>class noam</find>
+      <find>Batch(</find>
+      <find>make_model</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -77,15 +100,22 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/test_harvardnlp_transformer.py" />
-        <option value="$PROJECT_DIR$/havardnlp_transformer.py" />
+        <option value="$PROJECT_DIR$/havardnlp_transformer_cp1.py" />
+        <option value="$PROJECT_DIR$/test_harvardnlp_transformer_cp1.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds">
-    <option name="width" value="1920" />
-    <option name="height" value="1200" />
+  <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsGulpfileManager">
+    <detection-done>true</detection-done>
+    <sorting>DEFINITION_ORDER</sorting>
   </component>
+  <component name="ProjectFrameBounds" fullScreen="true">
+    <option name="width" value="1680" />
+    <option name="height" value="1050" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
@@ -96,7 +126,7 @@
         <subPane>
           <expand>
             <path>
-              <item name="my_traf" type="b2602c69:ProjectViewProjectNode" />
+              <item name="my_transformer" type="b2602c69:ProjectViewProjectNode" />
               <item name="my" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
@@ -112,21 +142,10 @@
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
   </component>
-  <component name="PyConsoleOptionsProvider">
-    <option name="myPythonConsoleState">
-      <console-settings module-name="my_traf" is-module-sdk="true">
-        <envs>
-          <env key="PATH" value="C:\Anaconda3;C:\Anaconda3\Library\mingw-w64\bin;C:\Anaconda3\Library\usr\bin;C:\Anaconda3\Library\bin;C:\Anaconda3\Scripts;C:\Anaconda3\bin;C:\Anaconda3\condabin;C:\ProgramData\DockerDesktop\version-bin;C:\Program Files\Docker\Docker\Resources\bin;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\iCLS;C:\Program Files\Intel\Intel(R) Management Engine Components\iCLS;C:\windows\system32;C:\windows;C:\windows\System32\Wbem;C:\windows\System32\WindowsPowerShell\v1.0;C:\windows\System32\OpenSSH;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files (x86)\Microsoft SQL Server\Client SDK\ODBC\130\Tools\Binn;C:\Program Files (x86)\Microsoft SQL Server\140\Tools\Binn;C:\Program Files (x86)\Microsoft SQL Server\140\DTS\Binn;C:\Program Files (x86)\Microsoft SQL Server\140\Tools\Binn\ManagementStudio;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Program Files\Git\cmd;C:\Program Files (x86)\sbt\bin;C:\Program Files\AdoptOpenJDK\jdk-8.0.212.03-hotspot\bin;C:\Program Files\AdoptOpenJDK\jdk-8.0.212.03-hotspot\lib;D:\_Inst\hadoop\bin;C:\Program Files (x86)\Graphviz2.38\bin;C:\Program Files\PuTTY;C:\Program Files\TortoiseGit\bin;C:\Users\dongwan.kim\AppData\Local\Microsoft\WindowsApps;.;C:\Users\dongwan.kim\AppData\Local\Programs\Microsoft VS Code\bin" />
-        </envs>
-        <option name="myUseModuleSdk" value="true" />
-        <option name="myModuleName" value="my_traf" />
-        <option name="myEnvs">
-          <map>
-            <entry key="PATH" value="C:\Anaconda3;C:\Anaconda3\Library\mingw-w64\bin;C:\Anaconda3\Library\usr\bin;C:\Anaconda3\Library\bin;C:\Anaconda3\Scripts;C:\Anaconda3\bin;C:\Anaconda3\condabin;C:\ProgramData\DockerDesktop\version-bin;C:\Program Files\Docker\Docker\Resources\bin;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\iCLS;C:\Program Files\Intel\Intel(R) Management Engine Components\iCLS;C:\windows\system32;C:\windows;C:\windows\System32\Wbem;C:\windows\System32\WindowsPowerShell\v1.0;C:\windows\System32\OpenSSH;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files (x86)\Microsoft SQL Server\Client SDK\ODBC\130\Tools\Binn;C:\Program Files (x86)\Microsoft SQL Server\140\Tools\Binn;C:\Program Files (x86)\Microsoft SQL Server\140\DTS\Binn;C:\Program Files (x86)\Microsoft SQL Server\140\Tools\Binn\ManagementStudio;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Program Files\Git\cmd;C:\Program Files (x86)\sbt\bin;C:\Program Files\AdoptOpenJDK\jdk-8.0.212.03-hotspot\bin;C:\Program Files\AdoptOpenJDK\jdk-8.0.212.03-hotspot\lib;D:\_Inst\hadoop\bin;C:\Program Files (x86)\Graphviz2.38\bin;C:\Program Files\PuTTY;C:\Program Files\TortoiseGit\bin;C:\Users\dongwan.kim\AppData\Local\Microsoft\WindowsApps;.;C:\Users\dongwan.kim\AppData\Local\Programs\Microsoft VS Code\bin" />
-          </map>
-        </option>
-      </console-settings>
-    </option>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -142,7 +161,7 @@
   </component>
   <component name="RunManager">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
-      <module name="my_traf" />
+      <module name="my_transformer" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -163,8 +182,8 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="test_harvardnlp_transformer" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="my_traf" />
+    <configuration name="test_harvardnlp_transformer_cp1" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="my_transformer" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -176,7 +195,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test_harvardnlp_transformer.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test_harvardnlp_transformer_cp1.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -187,7 +206,7 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.test_harvardnlp_transformer" />
+        <item itemvalue="Python.test_harvardnlp_transformer_cp1" />
       </list>
     </recent_temporary>
   </component>
@@ -196,116 +215,110 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="8572b878-1277-4d06-9269-94a65f8d2b8c" name="Default Changelist" comment="" />
-      <created>1571044403914</created>
+      <changelist id="7278965f-781b-4300-a61d-f9b1badab209" name="Default Changelist" comment="" />
+      <created>1570978679414</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1571044403914</updated>
-      <workItem from="1571044405181" duration="720000" />
-      <workItem from="1571046639362" duration="2490000" />
-      <workItem from="1571049926589" duration="1158000" />
-      <workItem from="1571051113111" duration="658000" />
-      <workItem from="1571051985927" duration="7480000" />
+      <updated>1570978679414</updated>
     </task>
+    <task id="LOCAL-00001" summary="added cp1">
+      <created>1571406979722</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1571406979723</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
-  <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="12506000" />
-  </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="1920" height="1200" extended-state="0" />
+    <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.13870968" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.1984127" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32928064" />
       <window_info anchor="bottom" id="Run" order="2" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.39731285" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.28213167" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Version Control" order="8" weight="0.32917467" />
-      <window_info anchor="bottom" id="Database Changes" order="9" />
+      <window_info anchor="bottom" id="Version Control" order="8" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Database Changes" order="9" show_stripe_button="false" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
-      <window_info anchor="bottom" id="Terminal" order="11" weight="0.2293666" />
-      <window_info anchor="bottom" id="Python Console" order="12" weight="0.31573898" />
+      <window_info anchor="bottom" id="Terminal" order="11" />
+      <window_info anchor="bottom" id="Python Console" order="12" weight="0.32928064" />
+      <window_info anchor="right" x="0" y="0" width="590" height="880" id="Documentation" side_tool="true" weight="0.32962668" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="SciView" order="3" />
       <window_info anchor="right" id="Database" order="4" />
-      <window_info anchor="right" x="0" y="0" width="430" height="1000" id="Documentation" order="5" side_tool="true" weight="0.3295699" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="added cp1" />
+    <option name="LAST_COMMIT_MESSAGE" value="added cp1" />
+  </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/havardnlp_transformer.py</url>
-          <line>238</line>
-          <option name="timeStamp" value="4" />
+          <url>file://$PROJECT_DIR$/test_harvardnlp_transformer_cp1.py</url>
+          <line>83</line>
+          <option name="timeStamp" value="6" />
         </line-breakpoint>
       </breakpoints>
+      <breakpoints-dialog>
+        <breakpoints-dialog />
+      </breakpoints-dialog>
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/pydevconsole.py">
+    <entry file="file://$PROJECT_DIR$/havardnlp_transformer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="64">
-          <caret line="4" selection-start-line="4" selection-end-line="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_HOME_DIR$/helpers/third_party/thriftpy/_shaded_thriftpy/transport/sslsocket.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="96">
-          <caret line="6" selection-start-line="6" selection-end-line="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://C:/Anaconda3/envs/pytorch/Lib/ssl.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="512">
-          <caret line="116" column="41" selection-start-line="116" selection-start-column="41" selection-end-line="116" selection-end-column="41" />
-          <folding>
-            <element signature="e#2919#2929#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://C:/Anaconda3/envs/pytorch/Lib/site-packages/numpy/_distributor_init.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="320">
-          <caret line="20" column="51" selection-start-line="20" selection-start-column="51" selection-end-line="20" selection-end-column="51" />
-        </state>
+        <state relative-caret-position="-2066" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/test_harvardnlp_transformer.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/modules/module.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="223">
+          <caret line="869" column="8" selection-start-line="869" selection-start-column="8" selection-end-line="869" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_imps/_pydev_execfile.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="255">
-          <caret line="122" selection-start-line="122" selection-end-line="129" selection-end-column="21" />
+          <caret line="17" selection-start-line="17" selection-end-line="17" />
         </state>
       </provider>
     </entry>
-    <entry file="file://C:/Anaconda3/Lib/site-packages/torch/nn/modules/module.py">
+    <entry file="file://$PROJECT_DIR$/test_harvardnlp_transformer_cp1.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="200">
-          <caret line="521" selection-start-line="521" selection-end-line="521" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/havardnlp_transformer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="421">
-          <caret line="241" column="27" lean-forward="true" selection-start-line="241" selection-start-column="27" selection-end-line="241" selection-end-column="27" />
+        <state relative-caret-position="214">
+          <caret line="83" selection-start-line="83" selection-end-line="83" />
           <folding>
-            <element signature="e#27#38#0" expanded="true" />
+            <marker date="1571420678815" expanded="true" signature="123:124" ph="..." />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/havardnlp_transformer_cp1.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="432">
+          <caret line="573" column="31" selection-start-line="573" selection-start-column="25" selection-end-line="573" selection-end-column="31" />
         </state>
       </provider>
     </entry>

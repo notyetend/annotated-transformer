@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
+<<<<<<< HEAD
     <list default="true" id="7278965f-781b-4300-a61d-f9b1badab209" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/../.gitignore" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/havardnlp_transformer_cp1.py" beforeDir="false" />
+=======
+    <list default="true" id="8572b878-1277-4d06-9269-94a65f8d2b8c" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+>>>>>>> origin/office
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -12,6 +17,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
+<<<<<<< HEAD
     <SUITE FILE_PATH="coverage/my_transformer$test_harvardnlp_transformer_cp1.coverage" NAME="test_harvardnlp_transformer_cp1 Coverage Results" MODIFIED="1571420678820" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="FileEditorManager">
@@ -21,17 +27,78 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="214">
               <caret line="83" selection-start-line="83" selection-end-line="83" />
+=======
+    <SUITE FILE_PATH="coverage/my_traf$test_harvardnlp_transformer.coverage" NAME="test_harvardnlp_transformer Coverage Results" MODIFIED="1571189318561" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/havardnlp_transformer.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="8416">
+              <caret line="536" column="11" selection-start-line="536" selection-start-column="8" selection-end-line="536" selection-end-column="11" />
+              <folding>
+                <element signature="e#27#38#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test_harvardnlp_transformer.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="2704">
+              <caret line="169" column="8" selection-start-line="169" selection-start-column="4" selection-end-line="169" selection-end-column="8" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/tf_trf.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="112">
+              <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
+>>>>>>> origin/office
             </state>
           </provider>
         </entry>
       </file>
     </leaf>
+<<<<<<< HEAD
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
       <find>class noam</find>
       <find>Batch(</find>
       <find>make_model</find>
+=======
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>layernorm</find>
+      <find>attention(</find>
+      <find>tgt_embed</find>
+      <find>decoderLayer</find>
+      <find>o_pe</find>
+      <find>def attention(</find>
+      <find>make_model(</find>
+      <find>make_model</find>
+      <find>def atten</find>
+      <find>generator</find>
+      <find>keep_prob</find>
+      <find>0.1</find>
+      <find>dropout(</find>
+>>>>>>> origin/office
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -40,8 +107,14 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
+<<<<<<< HEAD
         <option value="$PROJECT_DIR$/havardnlp_transformer_cp1.py" />
         <option value="$PROJECT_DIR$/test_harvardnlp_transformer_cp1.py" />
+=======
+        <option value="$PROJECT_DIR$/havardnlp_transformer.py" />
+        <option value="$PROJECT_DIR$/test_harvardnlp_transformer.py" />
+        <option value="$PROJECT_DIR$/tf_trf.py" />
+>>>>>>> origin/office
       </list>
     </option>
   </component>
@@ -55,8 +128,28 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+<<<<<<< HEAD
       <pane id="Scope" />
       <pane id="ProjectPane" />
+=======
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="my_traf" type="b2602c69:ProjectViewProjectNode" />
+              <item name="my" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="my_traf" type="b2602c69:ProjectViewProjectNode" />
+              <item name="my" type="462c0819:PsiDirectoryNode" />
+              <item name="dataset" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+>>>>>>> origin/office
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -69,6 +162,11 @@
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\playground\toys\annotated-transformer\my\dataset" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -143,6 +241,7 @@
       <created>1570978679414</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
+<<<<<<< HEAD
       <updated>1570978679414</updated>
       <workItem from="1572404658130" duration="8000" />
     </task>
@@ -152,17 +251,40 @@
       <option name="presentableId" value="LOCAL-00001" />
       <option name="project" value="LOCAL" />
       <updated>1571406979723</updated>
+=======
+      <updated>1571044403914</updated>
+      <workItem from="1571044405181" duration="720000" />
+      <workItem from="1571046639362" duration="2490000" />
+      <workItem from="1571049926589" duration="1158000" />
+      <workItem from="1571051113111" duration="658000" />
+      <workItem from="1571051985927" duration="24735000" />
+      <workItem from="1571964891239" duration="934000" />
+      <workItem from="1572346158101" duration="1899000" />
+      <workItem from="1572396894379" duration="710000" />
+    </task>
+    <task id="LOCAL-00001" summary="mmn">
+      <created>1571655529981</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1571655529981</updated>
+>>>>>>> origin/office
     </task>
     <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
+<<<<<<< HEAD
     <option name="totallyTimeSpent" value="8000" />
+=======
+    <option name="totallyTimeSpent" value="33304000" />
+>>>>>>> origin/office
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1200" extended-state="0" />
     <editor active="true" />
     <layout>
+<<<<<<< HEAD
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.20215054" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -170,6 +292,15 @@
       <window_info anchor="bottom" id="Find" order="1" weight="0.32928064" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.28213167" />
+=======
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.15591398" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.22168906" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.34165066" />
+>>>>>>> origin/office
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -177,30 +308,50 @@
       <window_info anchor="bottom" id="Version Control" order="8" show_stripe_button="false" />
       <window_info anchor="bottom" id="Database Changes" order="9" show_stripe_button="false" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
+<<<<<<< HEAD
       <window_info anchor="bottom" id="Terminal" order="11" />
       <window_info anchor="bottom" id="Python Console" order="12" weight="0.32928064" />
+=======
+      <window_info anchor="bottom" id="Terminal" order="11" weight="0.2293666" />
+      <window_info active="true" anchor="bottom" id="Python Console" order="12" visible="true" weight="0.31573898" />
+>>>>>>> origin/office
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="SciView" order="3" />
       <window_info anchor="right" id="Database" order="4" />
+<<<<<<< HEAD
       <window_info anchor="right" x="0" y="0" width="590" height="880" id="Documentation" order="5" side_tool="true" weight="0.32962668" />
+=======
+      <window_info anchor="right" x="0" y="0" width="430" height="1000" id="Documentation" order="5" side_tool="true" weight="0.6755555" />
+>>>>>>> origin/office
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
   <component name="VcsManagerConfiguration">
+<<<<<<< HEAD
     <MESSAGE value="added cp1" />
     <option name="LAST_COMMIT_MESSAGE" value="added cp1" />
+=======
+    <MESSAGE value="mmn" />
+    <option name="LAST_COMMIT_MESSAGE" value="mmn" />
+>>>>>>> origin/office
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+<<<<<<< HEAD
           <url>file://$PROJECT_DIR$/test_harvardnlp_transformer_cp1.py</url>
           <line>83</line>
           <option name="timeStamp" value="6" />
+=======
+          <url>file://$PROJECT_DIR$/havardnlp_transformer.py</url>
+          <line>324</line>
+          <option name="timeStamp" value="7" />
+>>>>>>> origin/office
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -211,6 +362,7 @@
         <state relative-caret-position="-2066" />
       </provider>
     </entry>
+<<<<<<< HEAD
     <entry file="file://$PROJECT_DIR$/test_harvardnlp_transformer.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -219,14 +371,45 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="255">
           <caret line="17" selection-start-line="17" selection-end-line="17" />
+=======
+    <entry file="file://C:/Anaconda3/Lib/site-packages/torch/nn/modules/module.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8224">
+          <caret line="521" selection-start-line="521" selection-end-line="521" />
+>>>>>>> origin/office
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/havardnlp_transformer_cp1.py" />
     <entry file="file://$PROJECT_DIR$/test_harvardnlp_transformer_cp1.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="214">
           <caret line="83" selection-start-line="83" selection-end-line="83" />
+=======
+        <state relative-caret-position="8416">
+          <caret line="536" column="11" selection-start-line="536" selection-start-column="8" selection-end-line="536" selection-end-column="11" />
+          <folding>
+            <element signature="e#27#38#0" expanded="true" />
+          </folding>
+>>>>>>> origin/office
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test_harvardnlp_transformer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2704">
+          <caret line="169" column="8" selection-start-line="169" selection-start-column="4" selection-end-line="169" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tf_trf.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="112">
+          <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

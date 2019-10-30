@@ -1,3 +1,7 @@
+"""
+https://github.com/Lsdefine/attention-is-all-you-need-keras/blob/master/transformer.py
+
+"""
 import numpy as np
 
 from tensorflow.python.keras.models import Model
@@ -7,6 +11,21 @@ from tensorflow.python.keras import backend as K
 
 
 def get_pos_encoding_matrix(max_len, d_emb):
+    """
+    Examples
+    -------
+    >>> pos_enc = get_pos_encoding_matrix(4, 12)
+    >>> pos_enc.shape  # (4, 12)
+
+    Parameters
+    ----------
+    max_len
+    d_emb
+
+    Returns
+    -------
+
+    """
     pos_enc = np.array([
         [pos / np.power(10000, 2 * (j // 2) / d_emb) for j in range(d_emb)]
         if pos != 0 else np.zeros(d_emb)

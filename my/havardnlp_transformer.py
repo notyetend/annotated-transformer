@@ -359,8 +359,25 @@ class Embeddings(nn.Module):
 
 
 class PositionalEncoding(nn.Module):
-    """Implement the PE function."""
+    """Implement the PE function.
 
+    >>> max_len = 4
+    >>> d_model = 12
+    >>> pe = torch.zeros(max_len, d_model); print(pe, pe.shape)
+
+    >>> # sentence number 0 to max_len-1
+    >>> position = torch.arange(start=0.0, end=max_len).unsqueeze(1); print(position, position.shape)
+
+    >>> # div term = exp{ -frac{2i}{d_model} * log(10000) }
+    >>> # PE(pos, 2i) = sin(pos/10000^{frac{2i}{d_model}}
+    >>> # i : index of 0 to d_model-1
+    >>> div_term = torch.exp(torch.arange(0.0, d_model, 2) * -(math.log(10000.0) / d_model))
+    >>> pe[:, 0::2] = torch.sin(position * div_term)
+    >>> pe[:, 1::2] = torch.cos(position * div_term)
+    >>> pe.shape  # (4, 12)
+    >>> pe = pe.unsqueeze(0)
+    >>> pe.shape  # (1, 4, 12)
+    """
     def __init__(self, d_model, dropout, max_len=5000):
         super(PositionalEncoding, self).__init__()
         self.dropout = nn.Dropout(p=dropout)

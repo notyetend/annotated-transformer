@@ -65,7 +65,7 @@ def data_gen(V, batch, nbatches, max_words_in_sentence):
         data[:, 0] = 1  # 1 for first column
         src = Variable(data, requires_grad=False).type(torch.long)
         tgt = Variable(data, requires_grad=False).type(torch.long)
-        yield Batch(src, tgt, 0)
+        yield BatchP(src, tgt, 0)
 
 
 def first_example():
@@ -90,10 +90,10 @@ def first_example():
 
     # Train the simple copy task.
     V = 7  # size of word dictionary
-    criterion = LabelSmoothing(size=V, padding_idx=0, smoothing=0.0)
-    model = make_model(src_vocab=V, tgt_vocab=V, N=2)
+    criterion = LabelSmoothingP(size=V, padding_idx=0, smoothing=0.0)
+    model = make_model_p(src_vocab=V, tgt_vocab=V, N=2)
 
-    model_opt = NoamOpt(
+    model_opt = NoamOptP(
         model_size=model.src_embed[0].d_model,
         factor=1,
         warmup=400,  # lr will grow until 'warmup' steps and then shrink
@@ -102,14 +102,14 @@ def first_example():
 
     for epoch in range(10):
         model.train()
-        run_epoch(
+        run_epoch_p(
             data_iter=data_gen(V=V, batch=5, nbatches=5, max_words_in_sentence=4),
             model=model,
             loss_compute=SimpleLossCompute(model.generator, criterion, model_opt)
         )
         model.eval()
-        print(run_epoch(data_gen(V=V, batch=5, nbatches=5, max_words_in_sentence=4), model,
-                        SimpleLossCompute(model.generator, criterion, None)))
+        print(run_epoch_p(data_gen(V=V, batch=5, nbatches=5, max_words_in_sentence=4), model,
+                          SimpleLossCompute(model.generator, criterion, None)))
 
 
 # encoder layer v1 ##############################
@@ -129,14 +129,16 @@ def get_encoder_output(num_head, d_model):
 
     """
     # 1st sublayer of 1st encoder
-    mha = MultiHeadedAttention(h=num_head, d_model=d_model)
-    norm = LayerNorm(d_model)
+    mha = MultiHeadedAttentionP(h=num_head, d_model=d_model)
+    norm = LayerNormP(d_model)
     o_sub_layer1 = mha(norm(o_pe), norm(o_pe), norm(o_pe), batch0.src_mask)  # [5, 4, 12]
 
     # 2nd sublayer of 1st encoder
-    pff = PositionwiseFeedForward(d_model=d_model, d_ff=hidden_size_pff)
+    pff = PositionwiseFeedForwardP(d_model=d_model, d_ff=hidden_size_pff)
     o_sub_layer2 = o_sub_layer1 + nn.Dropout(dropout_rate)(pff(norm(o_sub_layer1)))  # [5, 4, 12]
     return o_sub_layer2
+
+
 ##############################
 
 
@@ -154,6 +156,7 @@ def get_encoder_output(x, num_head, d_model, dropout_rate):
     Examples:
         >>> get_encoder_output(o_pe, num_head, d_model, dropout_rate)
     """
+
     class MySublayerConnection(nn.Module):
         def __init__(self, size, dropout_rate):
             super(MySublayerConnection, self).__init__()
@@ -163,14 +166,16 @@ def get_encoder_output(x, num_head, d_model, dropout_rate):
         def forward(self, x, sublayer):
             return x + self.dropout(sublayer(self.norm(x)))
 
-    sublayers = clones(MySublayerConnection(d_model, dropout_rate), 2)
+    sublayers = clones_p(MySublayerConnection(d_model, dropout_rate), 2)
 
-    mha = MultiHeadedAttention(h=num_head, d_model=d_model)  # 1st sublayer
+    mha = MultiHeadedAttentionP(h=num_head, d_model=d_model)  # 1st sublayer
     o_sub_layer1 = sublayers[0](x, lambda x: mha(x, x, x, batch0.src_mask))
 
-    pff = PositionwiseFeedForward(d_model=d_model, d_ff=hidden_size_pff)  # 2nd sublayer
+    pff = PositionwiseFeedForwardP(d_model=d_model, d_ff=hidden_size_pff)  # 2nd sublayer
     o_sub_layer2 = sublayers[1](o_sub_layer1, pff)
     return o_sub_layer2
+
+
 ##############################
 
 
@@ -201,13 +206,15 @@ class MyEncoderLayer(nn.Module):
         """
         super(MyEncoderLayer, self).__init__()
         self.size = size
-        self.sublayers = clones(MySublayerConnection(size, dropout_rate), 2)
-        self.mha = MultiHeadedAttention(h=num_head, d_model=size)  # 1st sublayer
-        self.pff = PositionwiseFeedForward(d_model=size, d_ff=hidden_size_pff)  # 2nd sublayer
+        self.sublayers = clones_p(MySublayerConnection(size, dropout_rate), 2)
+        self.mha = MultiHeadedAttentionP(h=num_head, d_model=size)  # 1st sublayer
+        self.pff = PositionwiseFeedForwardP(d_model=size, d_ff=hidden_size_pff)  # 2nd sublayer
 
     def forward(self, x, mask):
         o_sub_layer1 = self.sublayers[0](x, lambda x: self.mha(x, x, x, mask))
         return self.sublayers[1](o_sub_layer1, self.pff)
+
+
 ##############################
 
 
@@ -218,15 +225,17 @@ class MyEncoder(nn.Module):
     >>> encoder = MyEncoder(el, 2)
     >>> encoder.forward(o_pe, batch0.src_mask)  # [5, 4, 12]
     """
+
     def __init__(self, encoder, num_encoder):
         super(MyEncoder, self).__init__()
-        self.encoders = clones(encoder, num_encoder)
-        self.norm = LayerNorm(encoder.size)
+        self.encoders = clones_p(encoder, num_encoder)
+        self.norm = LayerNormP(encoder.size)
 
     def forward(self, x, mask):
         for encoder in self.encoders:
             x = encoder(x, mask)
         return self.norm(x)
+
 
 ##############################
 test = False
@@ -238,21 +247,20 @@ if test:
     encoder = MyEncoder(el, 6)
     o_encoder = encoder.forward(o_pe, batch0.src_mask)  # [5, 4, 12]
 
-
     # making input to encoder
-    em = Embeddings(d_model=d_model, vocab=size_dict)
-    pe = PositionalEncoding(d_model=d_model, dropout=dropout_rate)
+    em = EmbeddingsP(d_model=d_model, vocab=size_dict)
+    pe = PositionalEncodingP(d_model=d_model, dropout=dropout_rate)
     o_pe_decoder = pe(em(batch0.trg))  # input to encoder, [5, 4, 12]
 
     # decoder layer v1 ##############################
-    self_attn = MultiHeadedAttention(h=num_head, d_model=d_model)
-    src_attn = MultiHeadedAttention(h=num_head, d_model=d_model)
-    pff = PositionwiseFeedForward(d_model=d_model, d_ff=hidden_size_pff)
+    self_attn = MultiHeadedAttentionP(h=num_head, d_model=d_model)
+    src_attn = MultiHeadedAttentionP(h=num_head, d_model=d_model)
+    pff = PositionwiseFeedForwardP(d_model=d_model, d_ff=hidden_size_pff)
 
     # first input: output of embedding and positional encoding for decoder
     # second input: output of encoder this is used as key and value,
     #   output of previous sublayer this is used as query
-    sublayers = clones(MySublayerConnection(d_model, dropout_rate), 3)
+    sublayers = clones_p(MySublayerConnection(d_model, dropout_rate), 3)
     o_sublayer0 = sublayers[0](o_pe_decoder, lambda x: self_attn(
         query=o_pe_decoder,
         key=o_pe_decoder,
@@ -266,6 +274,8 @@ if test:
     # -> 이미 이런 단계(sublayers[0])에서 타겟 문장의 정보를 필터링 했으므로, 추가로 필터링 할 필요가 없어 보인다.
     o_sublayer2 = sublayers[2](o_sublayer1, pff)
     o_sublayer2.shape
+
+
 ##############################
 
 
@@ -276,13 +286,14 @@ class MyDecoderLayer(nn.Module):
     >>> o_decoder_layer = dl.forward(o_pe_decoder=o_pe_decoder, src_mask=batch0.src_mask, trg_mask=batch0.trg_mask)
     >>> o_decoder_layer.shape
     """
+
     def __init__(self, size, num_head):
         super(MyDecoderLayer, self).__init__()
         self.size = size
-        self.self_attn = MultiHeadedAttention(h=num_head, d_model=size)
-        self.src_attn = MultiHeadedAttention(h=num_head, d_model=size)
-        self.pff = PositionwiseFeedForward(d_model=size, d_ff=hidden_size_pff)
-        self.sublayers = clones(MySublayerConnection(size, dropout_rate), 3)
+        self.self_attn = MultiHeadedAttentionP(h=num_head, d_model=size)
+        self.src_attn = MultiHeadedAttentionP(h=num_head, d_model=size)
+        self.pff = PositionwiseFeedForwardP(d_model=size, d_ff=hidden_size_pff)
+        self.sublayers = clones_p(MySublayerConnection(size, dropout_rate), 3)
 
     def forward(self, o_prev_decoder, o_encoder, src_mask, trg_mask):
         """
@@ -301,6 +312,8 @@ class MyDecoderLayer(nn.Module):
             mask=src_mask))  # why use src_mask, not trg_mask???
         # -> 이미 이런 단계(sublayers[0])에서 타겟 문장의 정보를 필터링 했으므로, 추가로 필터링 할 필요가 없어 보인다.
         return sublayers[2](o_sublayer1, self.pff)
+
+
 ##############################
 
 
@@ -315,10 +328,11 @@ class MyDecoder(nn.Module):
     >>> o_decoder = decoder_layer.forward(o_pe_decoder, o_encoder, batch0.src_mask, batch0.trg_mask)
     >>> o_decoder.shape  # [5, 3, 12]
     """
+
     def __init__(self, decoder_layer, num_decoder):
         super(MyDecoder, self).__init__()
-        self.decoders = clones(decoder_layer, num_decoder)
-        self.norm = LayerNorm(decoder_layer.size)
+        self.decoders = clones_p(decoder_layer, num_decoder)
+        self.norm = LayerNormP(decoder_layer.size)
 
     def forward(self, o_prev_decoder, o_encoder, src_mask, trg_mask):
         for decoder in self.decoders:
@@ -339,15 +353,23 @@ if __name__ == '__main__':
 
     # ##### data that is composed of sentence which is sequence of word index.
     np.random.seed(0)
-    gen_batch = data_gen(V=size_dict, batch=batch_size, nbatches=2, max_words_in_sentence=max_words_in_sentence)
-    batch0 = next(gen_batch)
-    batch0.src; batch0.src.shape
-    batch0.src_mask; batch0.src_mask.shape
+    # gen_batch = data_gen(V=size_dict, batch=batch_size, nbatches=2, max_words_in_sentence=max_words_in_sentence)
+    # batch0 = next(gen_batch)
+    # batch0.src; batch0.src.shape
+    # batch0.src_mask; batch0.src_mask.shape
     # batch0.trg
     # batch0.trg_mask
-
+    src = torch.tensor([[0, 3, 0, 2],
+                        [1, 0, 3, 2],
+                        [0, 0, 0, 1],
+                        [1, 0, 0, 1],
+                        [3, 2, 2, 1]]); src
+    src_mask = torch.tensor([[[1, 1, 1, 1]],
+                             [[1, 1, 1, 1]],
+                             [[1, 1, 1, 1]],
+                             [[1, 1, 1, 1]],
+                             [[1, 1, 1, 1]]]); src_mask
     # making input to encoder
-    em = Embeddings(d_model=d_model, vocab=size_dict)
-    pe = PositionalEncoding(d_model=d_model, dropout=dropout_rate)
-    o_pe = pe(em(batch0.src))  # input to encoder, [5, 4, 12]
-    o_pe.shape
+    em = EmbeddingsP(d_model=d_model, vocab=size_dict)
+    pe = PositionalEncodingP(d_model=d_model, dropout=0.)
+    o_pe = pe(em(src))  # input to encoder, [5, 4, 12]

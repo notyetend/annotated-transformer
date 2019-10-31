@@ -12,14 +12,14 @@ from torch.autograd import Variable
 import matplotlib.pyplot as plt
 
 
-class EncoderDecoder(nn.Module):
+class EncoderDecoderP(nn.Module):
     """
     A standard Encoder-Decoder architecture. Base for this and many
     other models.
     """
 
     def __init__(self, encoder, decoder, src_embed, tgt_embed, generator):
-        super(EncoderDecoder, self).__init__()
+        super(EncoderDecoderP, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
         self.src_embed = src_embed
@@ -34,7 +34,7 @@ class EncoderDecoder(nn.Module):
         return output
 
 
-class Generator(nn.Module):
+class GeneratorP(nn.Module):
     """
     Define standard linear + softmax generation step.
 
@@ -42,25 +42,25 @@ class Generator(nn.Module):
     """
 
     def __init__(self, d_model, vocab):
-        super(Generator, self).__init__()
+        super(GeneratorP, self).__init__()
         self.proj = nn.Linear(d_model, vocab)
 
     def forward(self, x):
         return F.log_softmax(self.proj(x), dim=-1)
 
 
-def clones(module, N):
+def clones_p(module, N):
     """Produce N identical layers."""
     return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
 
 
-class Encoder(nn.Module):
+class EncoderP(nn.Module):
     """Core encoder is a stack of N layers"""
 
     def __init__(self, layer, N):
-        super(Encoder, self).__init__()
-        self.layers = clones(layer, N)
-        self.norm = LayerNorm(layer.size)
+        super(EncoderP, self).__init__()
+        self.layers = clones_p(layer, N)
+        self.norm = LayerNormP(layer.size)
 
     def forward(self, x, mask):
         """Pass the input (and mask) through each layer in turn."""
@@ -69,7 +69,7 @@ class Encoder(nn.Module):
         return self.norm(x)
 
 
-class LayerNorm(nn.Module):
+class LayerNormP(nn.Module):
     """
     Construct a layernorm module (See citation for details).
 
@@ -81,7 +81,7 @@ class LayerNorm(nn.Module):
     """
 
     def __init__(self, features, eps=1e-6):
-        super(LayerNorm, self).__init__()
+        super(LayerNormP, self).__init__()
         self.a_2 = nn.Parameter(torch.ones(features))
         self.b_2 = nn.Parameter(torch.zeros(features))
         self.eps = eps
@@ -92,15 +92,15 @@ class LayerNorm(nn.Module):
         return self.a_2 * (x - mean) / (std + self.eps) + self.b_2
 
 
-class SublayerConnection(nn.Module):
+class SublayerConnectionP(nn.Module):
     """
     A residual connection followed by a layer norm.
     Note for code simplicity the norm is first as opposed to last.
     """
 
     def __init__(self, size, dropout):
-        super(SublayerConnection, self).__init__()
-        self.norm = LayerNorm(size)
+        super(SublayerConnectionP, self).__init__()
+        self.norm = LayerNormP(size)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x, sublayer):
@@ -137,16 +137,16 @@ class SublayerConnection(nn.Module):
         return x + self.dropout(sublayer(self.norm(x)))
 
 
-class EncoderLayer(nn.Module):
+class EncoderLayerP(nn.Module):
     """
     Encoder is made up of self-attn and feed forward (defined below)
     """
 
     def __init__(self, size, self_attn, feed_forward, dropout):
-        super(EncoderLayer, self).__init__()
+        super(EncoderLayerP, self).__init__()
         self.self_attn = self_attn
         self.feed_forward = feed_forward
-        self.sublayer = clones(SublayerConnection(size, dropout), 2)
+        self.sublayer = clones_p(SublayerConnectionP(size, dropout), 2)
         self.size = size
 
     def forward(self, x, mask):
@@ -155,13 +155,13 @@ class EncoderLayer(nn.Module):
         return self.sublayer[1](x, self.feed_forward)
 
 
-class Decoder(nn.Module):
+class DecoderP(nn.Module):
     """Generic N layer decoder with masking."""
 
     def __init__(self, layer, N):
-        super(Decoder, self).__init__()
-        self.layers = clones(layer, N)
-        self.norm = LayerNorm(layer.size)
+        super(DecoderP, self).__init__()
+        self.layers = clones_p(layer, N)
+        self.norm = LayerNormP(layer.size)
 
     def forward(self, x, memory, src_mask, tgt_mask):
         for layer in self.layers:
@@ -169,16 +169,16 @@ class Decoder(nn.Module):
         return self.norm(x)
 
 
-class DecoderLayer(nn.Module):
+class DecoderLayerP(nn.Module):
     """Decoder is made of self-attn, src-attn, and feed forward (defined below)"""
 
     def __init__(self, size, self_attn, src_attn, feed_forward, dropout):
-        super(DecoderLayer, self).__init__()
+        super(DecoderLayerP, self).__init__()
         self.size = size
         self.self_attn = self_attn
         self.src_attn = src_attn
         self.feed_forward = feed_forward
-        self.sublayer = clones(SublayerConnection(size, dropout), 3)
+        self.sublayer = clones_p(SublayerConnectionP(size, dropout), 3)
 
     def forward(self, x, memory, src_mask, tgt_mask):
         """Follow Figure 1 (right) for connections."""
@@ -188,7 +188,7 @@ class DecoderLayer(nn.Module):
         return self.sublayer[2](x, self.feed_forward)
 
 
-def subsequent_mask(size):
+def subsequent_mask_p(size):
     """
     Mask out subsequent positions.
 
@@ -208,7 +208,7 @@ def subsequent_mask(size):
     return torch.from_numpy(subsequent_mask) == 0
 
 
-def attention(q_w_q, k_w_k, v_w_v, mask=None, dropout=None):
+def attention_p(q_w_q, k_w_k, v_w_v, mask=None, dropout=None):
     """
     Compute 'Scaled Dot Product Attention'
 
@@ -246,7 +246,7 @@ def attention(q_w_q, k_w_k, v_w_v, mask=None, dropout=None):
     return torch.matmul(p_attn, v_w_v), p_attn
 
 
-class MultiHeadedAttention(nn.Module):
+class MultiHeadedAttentionP(nn.Module):
     """
     q = torch. @@@
     mha = MultiHeadedAttention(h=8, d_model=512)
@@ -254,12 +254,12 @@ class MultiHeadedAttention(nn.Module):
     """
     def __init__(self, h, d_model, dropout=0.1):
         """Take in model size and number of heads."""
-        super(MultiHeadedAttention, self).__init__()
+        super(MultiHeadedAttentionP, self).__init__()
         assert d_model % h == 0
         # We assume d_v always equals d_k
         self.d_k = d_model // h  # d_k = d_v = d_model/h
         self.h = h  # number of heads
-        self.linears = clones(nn.Linear(d_model, d_model), 4)
+        self.linears = clones_p(nn.Linear(d_model, d_model), 4)
         """
         : 4 copies for W^Q, W^K, W^V and W^O (refers to page 5 of paper)
         : actually W^{Q, K, V} is for h heads, 
@@ -312,7 +312,7 @@ class MultiHeadedAttention(nn.Module):
              for l, x in zip(self.linears, (query, key, value))]
 
         # 2) Apply attention on all the projected vectors in batch.
-        x, self.attn = attention(q_w_q, k_w_k, v_w_v, mask=mask, dropout=self.dropout)
+        x, self.attn = attention_p(q_w_q, k_w_k, v_w_v, mask=mask, dropout=self.dropout)
 
         # 3) "Concat" using a view and apply a final linear.
         """
@@ -328,11 +328,11 @@ class MultiHeadedAttention(nn.Module):
         return self.linears[-1](x)
 
 
-class PositionwiseFeedForward(nn.Module):
+class PositionwiseFeedForwardP(nn.Module):
     """Implements FFN equation."""
 
     def __init__(self, d_model, d_ff, dropout=0.1):
-        super(PositionwiseFeedForward, self).__init__()
+        super(PositionwiseFeedForwardP, self).__init__()
         self.w_1 = nn.Linear(d_model, d_ff)
         self.w_2 = nn.Linear(d_ff, d_model)
         self.dropout = nn.Dropout(dropout)
@@ -341,15 +341,27 @@ class PositionwiseFeedForward(nn.Module):
         return self.w_2(self.dropout(F.relu(self.w_1(x))))
 
 
-class Embeddings(nn.Module):
-    def __init__(self, d_model, vocab):
-        super(Embeddings, self).__init__()
-        self.lut = nn.Embedding(num_embeddings=vocab, embedding_dim=d_model)
-        """ex) when word dict length = 7 and embedding size = 6
-        indexing 2nd word. 
-        >>> nn.Embedding(7, 6)(torch.tensor(2))
-        """
+class EmbeddingsP(nn.Module):
+    """
+    >>> np.random.seed(0)
+    >>> emb_weight = np.random.rand(7, 12)  # total 7 tokens and hidden size is 12
+    >>> em = EmbeddingsP(d_model=12, vocab=7, weight=emb_weight)
+    >>> test_emb_pytorch = em(torch.tensor([list(range(7))]))
+    >>> test_emb_pytorch = test_emb_pytorch.numpy()[:]
+    >>> print(test_emb_pytorch, test_emb_pytorch.shape)
+    """
+    def __init__(self, d_model, vocab, weight=None):
+        super(EmbeddingsP, self).__init__()
         self.d_model = d_model
+        self.lut = nn.Embedding(num_embeddings=vocab, embedding_dim=d_model)
+
+        if weight is None:
+            pass
+        elif isinstance(weight, np.ndarray):
+            self.lut.weight.data.copy_(torch.from_numpy(weight))
+            self.lut.weight.requires_grad = False
+        else:
+            raise ValueError('Invalid weight')
 
     def forward(self, x):
         """Why multiply sqrt of d_model? maybe this is scaling factor
@@ -360,9 +372,10 @@ class Embeddings(nn.Module):
         return self.lut(x) * math.sqrt(self.d_model)
 
 
-class PositionalEncoding(nn.Module):
+class PositionalEncodingP(nn.Module):
     """Implement the PE function.
 
+    >>> # test implementation
     >>> max_len = 4
     >>> d_model = 12
     >>> pe = torch.zeros(max_len, d_model); print(pe, pe.shape)
@@ -379,9 +392,21 @@ class PositionalEncoding(nn.Module):
     >>> pe.shape  # (4, 12)
     >>> pe = pe.unsqueeze(0)
     >>> pe.shape  # (1, 4, 12)
+
+
+    >>> # plotting
+    >>> d_model = 12
+    >>> num_sentences = 1
+    >>> num_tokens_in_sentence = 100
+    >>> plt.figure(figsize=(15, 5))
+    >>> pe = PositionalEncodingP(d_model=d_model, dropout=0.)
+    >>> y = pe.forward(Variable(torch.zeros(1, num_tokens_in_sentence, d_model)))
+    >>> plt.plot(np.arange(num_tokens_in_sentence), y[0, :, 4:8].data.numpy())
+    >>> plt.legend(["dim %d" % p for p in [4, 5, 6, 7]])
+    >>> plt.show()
     """
     def __init__(self, d_model, dropout, max_len=5000):
-        super(PositionalEncoding, self).__init__()
+        super(PositionalEncodingP, self).__init__()
         self.dropout = nn.Dropout(p=dropout)
 
         # Compute the positional encodings once in log space.
@@ -400,7 +425,7 @@ class PositionalEncoding(nn.Module):
         return self.dropout(x)
 
 
-def make_model(src_vocab, tgt_vocab, N=6, d_model=512, d_ff=2048, h=8, dropout=0.1):
+def make_model_p(src_vocab, tgt_vocab, N=6, d_model=512, d_ff=2048, h=8, dropout=0.1):
     """
     Helper: Construct a model from hyperparameters.
 
@@ -414,13 +439,13 @@ def make_model(src_vocab, tgt_vocab, N=6, d_model=512, d_ff=2048, h=8, dropout=0
     :return:
     """
     c = copy.deepcopy
-    attn = MultiHeadedAttention(h, d_model)
-    ff = PositionwiseFeedForward(d_model, d_ff, dropout)
-    position = PositionalEncoding(d_model, dropout)
+    attn = MultiHeadedAttentionP(h, d_model)
+    ff = PositionwiseFeedForwardP(d_model, d_ff, dropout)
+    position = PositionalEncodingP(d_model, dropout)
 
-    model = EncoderDecoder(
-        encoder=Encoder(  # 'encoder' is stack of N 'encoder layer'
-            layer=EncoderLayer(  # 'encoder layer' has 2 sub-layers,
+    model = EncoderDecoderP(
+        encoder=EncoderP(  # 'encoder' is stack of N 'encoder layer'
+            layer=EncoderLayerP(  # 'encoder layer' has 2 sub-layers,
                 size=d_model,    # which are 'multi-attn' and 'position-wise fully connected feed-forward'
                 self_attn=c(attn),
                 feed_forward=c(ff),
@@ -428,8 +453,8 @@ def make_model(src_vocab, tgt_vocab, N=6, d_model=512, d_ff=2048, h=8, dropout=0
             ),
             N=N
         ),
-        decoder=Decoder(  # stack of N 'decoder layer'
-            layer=DecoderLayer(
+        decoder=DecoderP(  # stack of N 'decoder layer'
+            layer=DecoderLayerP(
                 size=d_model,
                 self_attn=c(attn),
                 src_attn=c(attn),
@@ -439,19 +464,19 @@ def make_model(src_vocab, tgt_vocab, N=6, d_model=512, d_ff=2048, h=8, dropout=0
             N=N
         ),
         src_embed=nn.Sequential(
-            Embeddings(
+            EmbeddingsP(
                 d_model=d_model, vocab=src_vocab
             ),
             c(position)  # positional encoding
         ),
         tgt_embed=nn.Sequential(  # Sequential(f1(x), f2) means y = f2(f1(x))
-            Embeddings(
+            EmbeddingsP(
                 d_model=d_model,
                 vocab=tgt_vocab
             ),
             c(position)  # positional encoding
         ),
-        generator=Generator(d_model=d_model, vocab=tgt_vocab)
+        generator=GeneratorP(d_model=d_model, vocab=tgt_vocab)
     )
 
     # This was important from their code.
@@ -463,7 +488,7 @@ def make_model(src_vocab, tgt_vocab, N=6, d_model=512, d_ff=2048, h=8, dropout=0
     return model
 
 
-class Batch:
+class BatchP:
     """Object for holding a batch of data with mask during training."""
 
     def __init__(self, src, trg=None, pad=0):
@@ -515,7 +540,7 @@ class Batch:
                 dtype=torch.uint8)  # [5, 1, 3]    
         """
         tgt_mask = tgt_mask & Variable(
-            subsequent_mask(size=tgt.size(-1)).type_as(tgt_mask.data)
+            subsequent_mask_p(size=tgt.size(-1)).type_as(tgt_mask.data)
         )
         """
         >>> tgt.size(-1)  # 3
@@ -546,7 +571,7 @@ class Batch:
         return tgt_mask
 
 
-def run_epoch(data_iter, model, loss_compute):
+def run_epoch_p(data_iter, model, loss_compute):
     """Standard Training and Logging Function"""
     start = time.time()
     total_tokens = 0
@@ -573,7 +598,7 @@ def run_epoch(data_iter, model, loss_compute):
 global max_src_in_batch, max_tgt_in_batch
 
 
-def batch_size_fn(new, count, sofar):
+def batch_size_fn_p(new, count, sofar):
     """Keep augmenting batch and calculate total number of tokens + padding."""
     global max_src_in_batch, max_tgt_in_batch
     if count == 1:
@@ -586,7 +611,7 @@ def batch_size_fn(new, count, sofar):
     return max(src_elements, tgt_elements)
 
 
-class NoamOpt:
+class NoamOptP:
     """Optim wrapper that implements rate.
 
     from paper 5.3 Optimizer.
@@ -600,7 +625,7 @@ class NoamOpt:
      We used warmup_steps = 4000
 
     ex)
-    >>> opts = [NoamOpt(512, 1, 4000, None),
+    >>> opts = [NoamOptP(512, 1, 4000, None),
                 NoamOpt(512, 1, 8000, None),
                 NoamOpt(256, 1, 4000, None)]
     >>> plt.plot(np.arange(1, 20000), [[opt.rate(i) for opt in opts] for i in range(1, 20000)])
@@ -634,16 +659,16 @@ class NoamOpt:
         return self.factor * (self.model_size ** (-0.5) * min(step ** (-0.5), step * self.warmup ** (-1.5)))
 
 
-def get_std_opt(model):
-    return NoamOpt(model.src_embed[0].d_model, 2, 4000,
-                   torch.optim.Adam(model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9))
+def get_std_opt_p(model):
+    return NoamOptP(model.src_embed[0].d_model, 2, 4000,
+                    torch.optim.Adam(model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9))
 
 
-class LabelSmoothing(nn.Module):
+class LabelSmoothingP(nn.Module):
     """Implement label smoothing."""
 
     def __init__(self, size, padding_idx, smoothing=0.0):
-        super(LabelSmoothing, self).__init__()
+        super(LabelSmoothingP, self).__init__()
         # self.criterion = nn.KLDivLoss(size_average=False)
         self.criterion = nn.KLDivLoss(reduction='sum')  # fixed by kdw
         self.padding_idx = padding_idx
@@ -665,10 +690,10 @@ class LabelSmoothing(nn.Module):
         return self.criterion(x, Variable(true_dist, requires_grad=False))
 
 
-crit = LabelSmoothing(5, 0, 0.1)
+crit = LabelSmoothingP(5, 0, 0.1)
 
 
-def loss(x):
+def loss_p(x):
     d = x + 3 * 1
     predict = torch.FloatTensor([[0, x / d, 1 / d, 1 / d, 1 / d],
                                  ])

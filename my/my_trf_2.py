@@ -11,6 +11,8 @@ Converting 'https://nlp.seas.harvard.edu/2018/04/03/attention.html'
 """
 import numpy as np
 import math
+import matplotlib.pyplot as plt
+from functools import partial
 
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.layers import (
@@ -20,27 +22,40 @@ from tensorflow.python.keras.optimizers import Adam
 from tensorflow.python.keras import backend as K
 
 
-class PositionalEncoding(Layer):
+class PositionalEncodingK(Layer):
     """
-    max_words_in_sentence = 4  # of words in each sentence
-    batch_size = 5  # of sentences
-    size_dict = 7  # size of word dictionary
-    d_model = 12
-    hidden_size_pff = 11
-    num_head = 2
-    dropout_rate = 0.1
-    num_encoder_layer = 2
-    learning_rate = 0.001
+    >>> max_words_in_sentence = 4  # of words in each sentence
+    >>> batch_size = 5  # of sentences
+    >>> size_dict = 7  # size of word dictionary
+    >>> d_model = 12
+    >>> hidden_size_pff = 11
+    >>> num_head = 2
+    >>> dropout_rate = 0.1
+    >>> num_encoder_layer = 2
+    >>> learning_rate = 0.001
 
-    pe = np.zeros([max_words_in_sentence, d_model]); print(pe, pe.shape)
-    position = np.expand_dims(np.array(range(max_words_in_sentence)), 1); print(position, position.shape)
-    div_term = np.exp(np.arange(start=0.0, stop=d_model, step=2) * -(math.log(10000.0) / d_model)); print(div_term, div_term.shape)
-    pe[:, 0::2] = np.sin(position * div_term)
-    pe[:, 1::2] = np.cos(position * div_term)
-    pe = np.expand_dims(pe, 0); print(pe, pe.shape)
+    >>> # test implementation
+    >>> pe = np.zeros([max_words_in_sentence, d_model]); print(pe, pe.shape)
+    >>> position = np.expand_dims(np.array(range(max_words_in_sentence)), 1); print(position, position.shape)
+    >>> div_term = np.exp(np.arange(start=0.0, stop=d_model, step=2) * -(math.log(10000.0) / d_model)); print(div_term, div_term.shape)
+    >>> pe[:, 0::2] = np.sin(position * div_term)
+    >>> pe[:, 1::2] = np.cos(position * div_term)
+    >>> pe = np.expand_dims(pe, 0); print(pe, pe.shape)
+
+
+    >>> # plotting
+    >>> d_model = 12
+    >>> num_sentences = 1
+    >>> num_tokens_in_sentence = 100
+    >>> plt.figure(figsize=(15, 5))
+    >>> pe = PositionalEncodingK(d_model=d_model, dropout_rate=0)
+    >>> y = pe(K.zeros((num_sentences, num_tokens_in_sentence, d_model)))
+    >>> plt.plot(np.arange(num_tokens_in_sentence), K.eval(y)[0, :, 4:8])
+    >>> plt.legend(["dim %d" % p for p in [4, 5, 6, 7]])
+    >>> plt.show()
     """
 
-    def __init__(self, d_model, dropout, max_len=5000, **kwargs):
+    def __init__(self, d_model, dropout_rate, max_len=5000, **kwargs):
         """
 
         Parameters
@@ -49,13 +64,15 @@ class PositionalEncoding(Layer):
         d_model: embedding dim
         kwargs
         """
-        super(PositionalEncoding, self).__init__(**kwargs)
+        super(PositionalEncodingK, self).__init__(**kwargs)
 
-        self.dropout = dropout
+        self.dropout = Dropout(rate=dropout_rate)
 
         pe = np.zeros([max_len, d_model])
         position = np.expand_dims(np.array(range(max_len)), 1)
-        div_term = np.exp(np.arange(start=0.0, stop=d_model, step=2) * -(math.log(10000.0) / d_model))
+        div_term = np.exp(
+            np.arange(start=0.0, stop=d_model, step=2) * -(math.log(10000.0) / d_model)
+        )
 
         pe[:, 0::2] = np.sin(position * div_term)
         pe[:, 1::2] = np.cos(position * div_term)
@@ -69,15 +86,24 @@ class PositionalEncoding(Layer):
         return input_shape
 
 
-class Embeddings(Layer):
+class EmbeddingsK(Layer):
     """
-    >>> x = K.constant([[0, 6, 7, 1, 1]]); print(x, x.shape)  # one sentence with 5 token
-    >>> y = Embeddings(12, 7)(x)  # embedding on 12 dim for 7 tokens total.
+    >>> x = K.constant([[0, 6, 1, 1, 1]]); print(x, x.shape)  # one sentence with 5 token
+    >>> y = EmbeddingsK(d_model=12, vocab=7)(x)  # embedding on 12 dim for 7 tokens total.
     >>> out = K.eval(y)
     >>> print(out, out.shape)
+
+    >>> np.random.seed(0)
+    >>> emb_weight = np.random.rand(7, 12)  # total 7 tokens and hidden size is 12
+    >>> x = K.constant([list(range(7))]); print(x, x.shape)  # one sentence with 5 token
+    >>> y = EmbeddingsK(d_model=12, vocab=7, weight=emb_weight)(x)  # embedding on 12 dim for 7 tokens total.
+    >>> test_emb_keras = K.eval(y)
+    >>> print(test_emb_keras, test_emb_keras.shape)
+    >>> # np.equal(test_emb_pytorch, test_emb_keras)
+    >>> # np.array_equal(test_emb_pytorch, test_emb_keras)
     """
 
-    def __init__(self, d_model, vocab):
+    def __init__(self, d_model, vocab, weight=None):
         """
 
         Parameters
@@ -85,24 +111,31 @@ class Embeddings(Layer):
         d_model : 512 or 1024 or ..
         vocab : size of token dict
         """
-        super(Embeddings, self).__init__()
-        self.lut = Embedding(input_dim=vocab, output_dim=d_model)
+        super(EmbeddingsK, self).__init__()
         self.d_model = d_model
+
+        if weight is None:
+            self.lut = Embedding(input_dim=vocab, output_dim=d_model)
+        elif isinstance(weight, np.ndarray):
+            self.lut = Embedding(input_dim=vocab, output_dim=d_model, weights=[weight],
+                                 trainable=False)
+        else:
+            raise ValueError('Invalid weight')
 
     def call(self, x):
         return self.lut(x) * math.sqrt(self.d_model)
 
 
-class LayerNorm(Layer):
+class LayerNormK(Layer):
     """
-    >>> ln = LayerNorm(features=12)
+    >>> ln = LayerNormK(features=12)
     >>> x = K.constant([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]); print(x, x.shape)  # one token with d_model=12
     >>> y = K.eval(ln(x))
     >>>
     """
 
     def __init__(self, features, eps=1e-6):
-        super(LayerNorm, self).__init__()
+        super(LayerNormK, self).__init__()
         self.features = features  # d_model
         self.eps = eps
         self.a_2 = None
@@ -134,7 +167,7 @@ class LayerNorm(Layer):
             initializer='zeros',
             trainable=True
         )
-        return super(LayerNorm, self).build(self.features)
+        return super(LayerNormK, self).build(self.features)
 
     def call(self, x):
         mean = K.mean(x=x, axis=-1, keepdims=True)
@@ -142,11 +175,11 @@ class LayerNorm(Layer):
         return self.a_2 * (x - mean) / (std + self.eps) + self.b_2
 
 
-class Generator(Layer):
+class GeneratorK(Layer):
     """
     linear + softmax for final output layer.
 
-    >>> ge = Generator(d_model=12, vocab=7)
+    >>> ge = GeneratorK(d_model=12, vocab=7)
     >>> x = K.constant([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]); print(x, x.shape)  # output of final layer
     >>> y = ge(x)
     >>> out = K.eval(y)
@@ -161,7 +194,7 @@ class Generator(Layer):
         d_model: hidden size
         vocab: size of token dict
         """
-        super(Generator, self).__init__()
+        super(GeneratorK, self).__init__()
         self.proj = Dense(input_shape=(d_model,), units=vocab)
 
     def call(self, x):
@@ -172,7 +205,7 @@ class Generator(Layer):
         return K.log(x=K.softmax(x, axis=-1))
 
 
-if __name__ == '__main__':
+if __name__ == '__test__':
     max_words_in_sentence = 4  # of words in each sentence
     batch_size = 5  # of sentences
     size_dict = 7  # size of word dictionary
@@ -188,13 +221,13 @@ if __name__ == '__main__':
                       [1, 0, 3, 2],
                       [0, 0, 0, 1],
                       [1, 0, 0, 1],
-                      [3, 2, 2, 1]]); print(src, src.shape)
+                      [3, 2, 2, 1]]);
+    print(src, src.shape)
     src_mask = K.constant([[[1, 1, 1, 1]],
                            [[1, 1, 1, 1]],
                            [[1, 1, 1, 1]],
                            [[1, 1, 1, 1]],
-                           [[1, 1, 1, 1]]]); print(src_mask, src_mask.shape)
-    x = Embeddings(d_model=d_model, vocab=size_dict)(src)  # embedding on 12 dim for 7 tokens total.
-    x = PositionalEncoding(d_model=d_model, dropout=Dropout(rate=0.1))(x)
-    out = K.eval(x)
-    print(out, out.shape)
+                           [[1, 1, 1, 1]]]);
+    print(src_mask, src_mask.shape)
+    x = EmbeddingsK(d_model=d_model, vocab=size_dict)(src)  # embedding on 12 dim for 7 tokens total.
+    x = PositionalEncodingK(d_model=d_model, dropout_rate=0.)(x)

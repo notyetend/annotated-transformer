@@ -63,7 +63,7 @@ def data_gen(V, batch, nbatches, max_words_in_sentence):
         data[:, 0] = 1  # 1 for first column
         src = Variable(data, requires_grad=False)
         tgt = Variable(data, requires_grad=False)
-        yield Batch(src, tgt, 0)
+        yield BatchP(src, tgt, 0)
 
 
 # ##### params
@@ -90,8 +90,8 @@ batch0.trg
 batch0.trg_mask
 
 # making input to encoder
-em = Embeddings(d_model=d_model, vocab=size_dict)
-pe = PositionalEncoding(d_model=d_model, dropout=dropout_rate)
+em = EmbeddingsP(d_model=d_model, vocab=size_dict)
+pe = PositionalEncodingP(d_model=d_model, dropout=dropout_rate)
 o_pe = pe(em(batch0.src))  # input to encoder, [5, 4, 12]
 
 
@@ -120,9 +120,9 @@ class MyEncoderLayer(nn.Module):
         """
         super(MyEncoderLayer, self).__init__()
         self.size = size
-        self.sublayers = clones(MySublayerConnection(size, dropout_rate), 2)
-        self.mha = MultiHeadedAttention(h=num_head, d_model=size)  # 1st sublayer
-        self.pff = PositionwiseFeedForward(d_model=size, d_ff=hidden_size_pff)  # 2nd sublayer
+        self.sublayers = clones_p(MySublayerConnection(size, dropout_rate), 2)
+        self.mha = MultiHeadedAttentionP(h=num_head, d_model=size)  # 1st sublayer
+        self.pff = PositionwiseFeedForwardP(d_model=size, d_ff=hidden_size_pff)  # 2nd sublayer
 
     def forward(self, x, mask):
         o_sub_layer1 = self.sublayers[0](x, lambda x: self.mha(x, x, x, mask))

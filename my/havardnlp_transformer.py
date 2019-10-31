@@ -76,6 +76,8 @@ class LayerNorm(nn.Module):
     ln = LayerNorm(10)
     x = torch.tensor([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]).type(torch.float)
     ln.forward(x)
+
+
     """
 
     def __init__(self, features, eps=1e-6):
@@ -673,4 +675,3 @@ def loss(x):
     # print(predict)
     return crit(Variable(predict.log()),
                 Variable(torch.LongTensor([1]))).data[0]
-

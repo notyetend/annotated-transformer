@@ -4,6 +4,10 @@ Created at 2019-10-30
 
 @author: dongwan.kim
 
+Converting 'https://nlp.seas.harvard.edu/2018/04/03/attention.html'
+ which is pytorch implementation
+ to Keras implementation.
+
 """
 import numpy as np
 import math
@@ -14,37 +18,6 @@ from tensorflow.python.keras.layers import (
 )
 from tensorflow.python.keras.optimizers import Adam
 from tensorflow.python.keras import backend as K
-
-
-def get_pos_encoding_matrix(max_len, d_emb):
-    """
-    Examples
-    -------
-    >>> pos_enc = get_pos_encoding_matrix(4, 12)
-    >>> pos_enc.shape  # (4, 12)
-
-    Parameters
-    ----------
-    max_len
-    d_emb
-
-    Returns
-    -------
-
-    """
-    pos_enc = np.array([
-        [pos / np.power(10000, 2 * (j // 2) / d_emb) for j in range(d_emb)]
-        if pos != 0 else np.zeros(d_emb)
-        for pos in range(max_len)
-    ])
-    pos_enc[1:, 0::2] = np.sin(pos_enc[1:, 0::2])  # dim 2i
-    pos_enc[1:, 1::2] = np.cos(pos_enc[1:, 1::2])  # dim 2i+1
-    return pos_enc
-
-
-
-
-
 
 
 class PositionalEncoding(Layer):
@@ -66,6 +39,7 @@ class PositionalEncoding(Layer):
     pe[:, 1::2] = np.cos(position * div_term)
     pe = np.expand_dims(pe, 0); print(pe, pe.shape)
     """
+
     def __init__(self, d_model, dropout, max_len=5000, **kwargs):
         """
 
@@ -91,15 +65,136 @@ class PositionalEncoding(Layer):
         x = x + K.constant(self.pe[:, :x.shape[1].value])
         return self.dropout(x)
 
-PositionalEncoding(3, None, 4)
+    def compute_output_shape(self, input_shape):
+        return input_shape
 
 
+class Embeddings(Layer):
+    """
+    >>> x = K.constant([[0, 6, 7, 1, 1]]); print(x, x.shape)  # one sentence with 5 token
+    >>> y = Embeddings(12, 7)(x)  # embedding on 12 dim for 7 tokens total.
+    >>> out = K.eval(y)
+    >>> print(out, out.shape)
+    """
+
+    def __init__(self, d_model, vocab):
+        """
+
+        Parameters
+        ----------
+        d_model : 512 or 1024 or ..
+        vocab : size of token dict
+        """
+        super(Embeddings, self).__init__()
+        self.lut = Embedding(input_dim=vocab, output_dim=d_model)
+        self.d_model = d_model
+
+    def call(self, x):
+        return self.lut(x) * math.sqrt(self.d_model)
 
 
-inputs = Input(shape=(4,))
-pos_emb = PosEncodingLayer(dim_dict, dim_emb)(inputs)
-src_emb = Embedding(input_dim=dim_dict, output_dim=dim_emb, input_length=dim_batch)(inputs)
-add_layer = Lambda(lambda x: x[0] + x[1], output_shape=lambda x: x[0])
-input_emb = add_layer([src_emb, pos_emb])
+class LayerNorm(Layer):
+    """
+    >>> ln = LayerNorm(features=12)
+    >>> x = K.constant([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]); print(x, x.shape)  # one token with d_model=12
+    >>> y = K.eval(ln(x))
+    >>>
+    """
 
-inputs.shape[1].value
+    def __init__(self, features, eps=1e-6):
+        super(LayerNorm, self).__init__()
+        self.features = features  # d_model
+        self.eps = eps
+        self.a_2 = None
+        self.b_2 = None
+
+    def build(self, _):
+        """
+        weights are shared for all layer normalization.
+            according to description of add_weight function
+            'Adds a new variable to the layer, or gets an existing one; returns it'
+
+        Parameters
+        ----------
+        _
+
+        Returns
+        -------
+
+        """
+        self.a_2 = self.add_weight(
+            name='layer_norm_scale',
+            shape=(self.features,),
+            initializer='ones',
+            trainable=True
+        )
+        self.b_2 = self.add_weight(
+            name='layer_norm_bias',
+            shape=(self.features,),
+            initializer='zeros',
+            trainable=True
+        )
+        return super(LayerNorm, self).build(self.features)
+
+    def call(self, x):
+        mean = K.mean(x=x, axis=-1, keepdims=True)
+        std = K.std(x=x, axis=-1, keepdims=True)
+        return self.a_2 * (x - mean) / (std + self.eps) + self.b_2
+
+
+class Generator(Layer):
+    """
+    linear + softmax for final output layer.
+
+    >>> ge = Generator(d_model=12, vocab=7)
+    >>> x = K.constant([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]); print(x, x.shape)  # output of final layer
+    >>> y = ge(x)
+    >>> out = K.eval(y)
+    >>> print(out, out.shape, K.eval(K.argmax(out)))
+    """
+
+    def __init__(self, d_model, vocab):
+        """
+
+        Parameters
+        ----------
+        d_model: hidden size
+        vocab: size of token dict
+        """
+        super(Generator, self).__init__()
+        self.proj = Dense(input_shape=(d_model,), units=vocab)
+
+    def call(self, x):
+        """
+        softmax followed by log is not stable,
+        need to use log_softmax after upgrade to tf 2.0
+        """
+        return K.log(x=K.softmax(x, axis=-1))
+
+
+if __name__ == '__main__':
+    max_words_in_sentence = 4  # of words in each sentence
+    batch_size = 5  # of sentences
+    size_dict = 7  # size of word dictionary
+    d_model = 12
+    hidden_size_pff = 11
+    num_head = 2
+    dropout_rate = 0.1
+    num_encoder_layer = 2
+    learning_rate = 0.001
+
+    # x = Input(shape=(max_words_in_sentence,))
+    src = K.constant([[0, 3, 0, 2],
+                      [1, 0, 3, 2],
+                      [0, 0, 0, 1],
+                      [1, 0, 0, 1],
+                      [3, 2, 2, 1]]); print(src, src.shape)
+    src_mask = K.constant([[[1, 1, 1, 1]],
+                           [[1, 1, 1, 1]],
+                           [[1, 1, 1, 1]],
+                           [[1, 1, 1, 1]],
+                           [[1, 1, 1, 1]]]); print(src_mask, src_mask.shape)
+    x = Embeddings(d_model=d_model, vocab=size_dict)(src)  # embedding on 12 dim for 7 tokens total.
+    x = PositionalEncoding(d_model=d_model, dropout=Dropout(rate=0.1))(x)
+    out = K.eval(x)
+    print(out, out.shape)

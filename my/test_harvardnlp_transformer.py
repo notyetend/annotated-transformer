@@ -5,14 +5,17 @@ def data_gen(V, batch, nbatches, max_words_in_sentence):
     """
     Generate random data for a src-tgt copy task.
 
-    # 5: # of sentences
+    # 5: # of sentences per batch == batch(2nd arg)
     # 4: # of words in each sentence
     # 7: size of word dictionary
     np.random.randint(low=1, high=7, size=(5, 4))  # 5 by 4 matrix
 
-    >>> gen = data_gen(7, 5, 2)
+    >>> gen = data_gen(7, 5, 2, 4)
     >>> b0 = next(gen)
     >>> b0.src
+    >>> b0.trg
+    >>> b0.src.shape  # [5, 4]
+    >>> b0.ntokens
     tensor([[1, 2, 3, 2],
             [1, 2, 1, 4],
             [1, 2, 4, 5],
@@ -53,7 +56,7 @@ def data_gen(V, batch, nbatches, max_words_in_sentence):
              [1, 1, 0],
              [1, 1, 1]]], dtype=torch.uint8)  # [5, 3, 3]
 
-    >>> b0.ntokens
+    >>> b0.ntokens  # 15
 
     >>> b0.src.shape  # (5, 4)
     """
@@ -65,40 +68,30 @@ def data_gen(V, batch, nbatches, max_words_in_sentence):
         yield Batch(src, tgt, 0)
 
 
-class SimpleLossCompute:
-    """A simple loss compute and train function."""
+def first_example():
+    class SimpleLossCompute:
+        """A simple loss compute and train function."""
 
-    def __init__(self, generator, criterion, opt=None):
-        self.generator = generator
-        self.criterion = criterion
-        self.opt = opt
+        def __init__(self, generator, criterion, opt=None):
+            self.generator = generator
+            self.criterion = criterion
+            self.opt = opt
 
-    def __call__(self, x, y, norm):
-        x = self.generator(x)
-        norm = norm.type(torch.FloatTensor)  # added by kdw
-        loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1)) / norm
-        loss.backward()
-        if self.opt is not None:
-            self.opt.step()
-            self.opt.optimizer.zero_grad()
-        # return loss.data[0] * norm
-        return loss.data.item() * norm
+        def __call__(self, x, y, norm):
+            x = self.generator(x)
+            norm = norm.type(torch.FloatTensor)  # added by kdw
+            loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1)) / norm
+            loss.backward()
+            if self.opt is not None:
+                self.opt.step()
+                self.opt.optimizer.zero_grad()
+            # return loss.data[0] * norm
+            return loss.data.item() * norm
 
-
-def test_training():
     # Train the simple copy task.
     V = 7  # size of word dictionary
-    criterion = LabelSmoothing(
-        size=V,
-        padding_idx=0,
-        smoothing=0.0
-    )
-
-    model = make_model(
-        src_vocab=V,
-        tgt_vocab=V,
-        N=2
-    )
+    criterion = LabelSmoothing(size=V, padding_idx=0, smoothing=0.0)
+    model = make_model(src_vocab=V, tgt_vocab=V, N=2)
 
     model_opt = NoamOpt(
         model_size=model.src_embed[0].d_model,
@@ -110,43 +103,13 @@ def test_training():
     for epoch in range(10):
         model.train()
         run_epoch(
-            data_iter=data_gen(V=V, batch=5, nbatches=20, max_words_in_sentence=4),
+            data_iter=data_gen(V=V, batch=5, nbatches=5, max_words_in_sentence=4),
             model=model,
             loss_compute=SimpleLossCompute(model.generator, criterion, model_opt)
         )
         model.eval()
-        print(run_epoch(data_gen(V=V, batch=5, nbatches=5), model,
+        print(run_epoch(data_gen(V=V, batch=5, nbatches=5, max_words_in_sentence=4), model,
                         SimpleLossCompute(model.generator, criterion, None)))
-
-
-# ##### params
-max_words_in_sentence = 4  # of words in each sentence
-batch_size = 5  # of sentences
-size_dict = 7  # size of word dictionary
-d_model = 12
-hidden_size_pff = 11
-num_head = 2
-dropout_rate = 0.1
-num_encoder_layer = 2
-# model = make_model(
-#     src_vocab=size_dict,
-#     tgt_vocab=size_dict,
-#     N=2  # num of transformer unit
-# )
-
-# ##### data that is composed of sentence which is sequence of word index.
-np.random.seed(0)
-gen_batch = data_gen(V=size_dict, batch=batch_size, nbatches=2, max_words_in_sentence=max_words_in_sentence)
-batch0 = next(gen_batch)
-batch0.src
-batch0.src_mask
-batch0.trg
-batch0.trg_mask
-
-# making input to encoder
-em = Embeddings(d_model=d_model, vocab=size_dict)
-pe = PositionalEncoding(d_model=d_model, dropout=dropout_rate)
-o_pe_encoder = pe(em(batch0.src))  # input to encoder, [5, 4, 12]
 
 
 # encoder layer v1 ##############################
@@ -168,7 +131,7 @@ def get_encoder_output(num_head, d_model):
     # 1st sublayer of 1st encoder
     mha = MultiHeadedAttention(h=num_head, d_model=d_model)
     norm = LayerNorm(d_model)
-    o_sub_layer1 = mha(norm(o_pe_encoder), norm(o_pe_encoder), norm(o_pe_encoder), batch0.src_mask)  # [5, 4, 12]
+    o_sub_layer1 = mha(norm(o_pe), norm(o_pe), norm(o_pe), batch0.src_mask)  # [5, 4, 12]
 
     # 2nd sublayer of 1st encoder
     pff = PositionwiseFeedForward(d_model=d_model, d_ff=hidden_size_pff)
@@ -189,7 +152,7 @@ def get_encoder_output(x, num_head, d_model, dropout_rate):
     Returns:
 
     Examples:
-        >>> get_encoder_output(o_pe_encoder, num_head, d_model, dropout_rate)
+        >>> get_encoder_output(o_pe, num_head, d_model, dropout_rate)
     """
     class MySublayerConnection(nn.Module):
         def __init__(self, size, dropout_rate):
@@ -200,7 +163,7 @@ def get_encoder_output(x, num_head, d_model, dropout_rate):
         def forward(self, x, sublayer):
             return x + self.dropout(sublayer(self.norm(x)))
 
-    sublayers = clones(MySublayerConnection(d_model, dropout_rate), 2)  # residual con with norm & dropout
+    sublayers = clones(MySublayerConnection(d_model, dropout_rate), 2)
 
     mha = MultiHeadedAttention(h=num_head, d_model=d_model)  # 1st sublayer
     o_sub_layer1 = sublayers[0](x, lambda x: mha(x, x, x, batch0.src_mask))
@@ -225,7 +188,7 @@ class MySublayerConnection(nn.Module):
 class MyEncoderLayer(nn.Module):
     """
     >>> el = MyEncoderLayer(d_model, dropout_rate, num_head, hidden_size_pff)
-    >>> el.forward(o_pe_encoder, batch0.src_mask)  # [5, 4, 12]
+    >>> el.forward(o_pe, batch0.src_mask)  # [5, 4, 12]
     """
 
     def __init__(self, size, dropout_rate, num_head, hidden_size_pff):
@@ -252,8 +215,8 @@ class MyEncoderLayer(nn.Module):
 class MyEncoder(nn.Module):
     """
     >>> el = MyEncoderLayer(d_model, dropout_rate, num_head, hidden_size_pff)
-    >>> encoder = MyEncoder(el, 6)
-    >>> o_encoder = encoder.forward(o_pe_encoder, batch0.src_mask)  # [5, 4, 12]
+    >>> encoder = MyEncoder(el, 2)
+    >>> encoder.forward(o_pe, batch0.src_mask)  # [5, 4, 12]
     """
     def __init__(self, encoder, num_encoder):
         super(MyEncoder, self).__init__()
@@ -266,43 +229,43 @@ class MyEncoder(nn.Module):
         return self.norm(x)
 
 ##############################
+test = False
+if test:
+    # data for decoder
+    batch0.trg
+    batch0.trg_mask
+    el = MyEncoderLayer(d_model, dropout_rate, num_head, hidden_size_pff)
+    encoder = MyEncoder(el, 6)
+    o_encoder = encoder.forward(o_pe, batch0.src_mask)  # [5, 4, 12]
 
 
-# data for decoder
-batch0.trg
-batch0.trg_mask
-el = MyEncoderLayer(d_model, dropout_rate, num_head, hidden_size_pff)
-encoder = MyEncoder(el, 6)
-o_encoder = encoder.forward(o_pe_encoder, batch0.src_mask)  # [5, 4, 12]
+    # making input to encoder
+    em = Embeddings(d_model=d_model, vocab=size_dict)
+    pe = PositionalEncoding(d_model=d_model, dropout=dropout_rate)
+    o_pe_decoder = pe(em(batch0.trg))  # input to encoder, [5, 4, 12]
 
+    # decoder layer v1 ##############################
+    self_attn = MultiHeadedAttention(h=num_head, d_model=d_model)
+    src_attn = MultiHeadedAttention(h=num_head, d_model=d_model)
+    pff = PositionwiseFeedForward(d_model=d_model, d_ff=hidden_size_pff)
 
-# making input to encoder
-em = Embeddings(d_model=d_model, vocab=size_dict)
-pe = PositionalEncoding(d_model=d_model, dropout=dropout_rate)
-o_pe_decoder = pe(em(batch0.trg))  # input to encoder, [5, 4, 12]
-
-# decoder layer v1 ##############################
-self_attn = MultiHeadedAttention(h=num_head, d_model=d_model)
-src_attn = MultiHeadedAttention(h=num_head, d_model=d_model)
-pff = PositionwiseFeedForward(d_model=d_model, d_ff=hidden_size_pff)
-
-# first input: output of embedding and positional encoding for decoder
-# second input: output of encoder this is used as key and value,
-#   output of previous sublayer this is used as query
-sublayers = clones(MySublayerConnection(d_model, dropout_rate), 3)
-o_sublayer0 = sublayers[0](o_pe_decoder, lambda x: self_attn(
-    query=o_pe_decoder,
-    key=o_pe_decoder,
-    value=o_pe_decoder,
-    mask=batch0.trg_mask))
-o_sublayer1 = sublayers[1](o_sublayer0, lambda x: src_attn(
-    query=o_sublayer0,
-    key=o_encoder,
-    value=o_encoder,
-    mask=batch0.src_mask))  # why use src_mask, not trg_mask???
-# -> 이미 이런 단계(sublayers[0])에서 타겟 문장의 정보를 필터링 했으므로, 추가로 필터링 할 필요가 없어 보인다.
-o_sublayer2 = sublayers[2](o_sublayer1, pff)
-o_sublayer2.shape
+    # first input: output of embedding and positional encoding for decoder
+    # second input: output of encoder this is used as key and value,
+    #   output of previous sublayer this is used as query
+    sublayers = clones(MySublayerConnection(d_model, dropout_rate), 3)
+    o_sublayer0 = sublayers[0](o_pe_decoder, lambda x: self_attn(
+        query=o_pe_decoder,
+        key=o_pe_decoder,
+        value=o_pe_decoder,
+        mask=batch0.trg_mask))
+    o_sublayer1 = sublayers[1](o_sublayer0, lambda x: src_attn(
+        query=o_sublayer0,
+        key=o_encoder,
+        value=o_encoder,
+        mask=batch0.src_mask))  # why use src_mask, not trg_mask???
+    # -> 이미 이런 단계(sublayers[0])에서 타겟 문장의 정보를 필터링 했으므로, 추가로 필터링 할 필요가 없어 보인다.
+    o_sublayer2 = sublayers[2](o_sublayer1, pff)
+    o_sublayer2.shape
 ##############################
 
 
@@ -362,3 +325,29 @@ class MyDecoder(nn.Module):
             o_prev_decoder = decoder(o_prev_decoder, o_encoder, src_mask, trg_mask)
         return o_prev_decoder
 
+
+if __name__ == '__main__':
+    # ##### params
+    max_words_in_sentence = 4  # of words in each sentence
+    batch_size = 5  # of sentences
+    size_dict = 7  # size of word dictionary
+    d_model = 12
+    hidden_size_pff = 11
+    num_head = 2
+    dropout_rate = 0.1
+    num_encoder_layer = 2
+
+    # ##### data that is composed of sentence which is sequence of word index.
+    np.random.seed(0)
+    gen_batch = data_gen(V=size_dict, batch=batch_size, nbatches=2, max_words_in_sentence=max_words_in_sentence)
+    batch0 = next(gen_batch)
+    batch0.src; batch0.src.shape
+    batch0.src_mask; batch0.src_mask.shape
+    # batch0.trg
+    # batch0.trg_mask
+
+    # making input to encoder
+    em = Embeddings(d_model=d_model, vocab=size_dict)
+    pe = PositionalEncoding(d_model=d_model, dropout=dropout_rate)
+    o_pe = pe(em(batch0.src))  # input to encoder, [5, 4, 12]
+    o_pe.shape

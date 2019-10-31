@@ -1,0 +1,200 @@
+# -*- coding: utf-8 -*-
+"""
+Created at 2019-10-30
+
+@author: dongwan.kim
+
+Converting 'https://nlp.seas.harvard.edu/2018/04/03/attention.html'
+ which is pytorch implementation
+ to Keras implementation.
+
+"""
+import numpy as np
+import math
+
+from tensorflow.python.keras.models import Model
+from tensorflow.python.keras.layers import (
+    Dense, Flatten, Conv1D, Dropout, Embedding, Input, Lambda, Layer, Softmax
+)
+from tensorflow.python.keras.optimizers import Adam
+from tensorflow.python.keras import backend as K
+
+
+class PositionalEncoding(Layer):
+    """
+    max_words_in_sentence = 4  # of words in each sentence
+    batch_size = 5  # of sentences
+    size_dict = 7  # size of word dictionary
+    d_model = 12
+    hidden_size_pff = 11
+    num_head = 2
+    dropout_rate = 0.1
+    num_encoder_layer = 2
+    learning_rate = 0.001
+
+    pe = np.zeros([max_words_in_sentence, d_model]); print(pe, pe.shape)
+    position = np.expand_dims(np.array(range(max_words_in_sentence)), 1); print(position, position.shape)
+    div_term = np.exp(np.arange(start=0.0, stop=d_model, step=2) * -(math.log(10000.0) / d_model)); print(div_term, div_term.shape)
+    pe[:, 0::2] = np.sin(position * div_term)
+    pe[:, 1::2] = np.cos(position * div_term)
+    pe = np.expand_dims(pe, 0); print(pe, pe.shape)
+    """
+
+    def __init__(self, d_model, dropout, max_len=5000, **kwargs):
+        """
+
+        Parameters
+        ----------
+        max_len: max number of tokens in sentence.
+        d_model: embedding dim
+        kwargs
+        """
+        super(PositionalEncoding, self).__init__(**kwargs)
+
+        self.dropout = dropout
+
+        pe = np.zeros([max_len, d_model])
+        position = np.expand_dims(np.array(range(max_len)), 1)
+        div_term = np.exp(np.arange(start=0.0, stop=d_model, step=2) * -(math.log(10000.0) / d_model))
+
+        pe[:, 0::2] = np.sin(position * div_term)
+        pe[:, 1::2] = np.cos(position * div_term)
+        self.pe = np.expand_dims(pe, 0)
+
+    def call(self, x):
+        x = x + K.constant(self.pe[:, :x.shape[1].value])
+        return self.dropout(x)
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
+
+
+class Embeddings(Layer):
+    """
+    >>> x = K.constant([[0, 6, 7, 1, 1]]); print(x, x.shape)  # one sentence with 5 token
+    >>> y = Embeddings(12, 7)(x)  # embedding on 12 dim for 7 tokens total.
+    >>> out = K.eval(y)
+    >>> print(out, out.shape)
+    """
+
+    def __init__(self, d_model, vocab):
+        """
+
+        Parameters
+        ----------
+        d_model : 512 or 1024 or ..
+        vocab : size of token dict
+        """
+        super(Embeddings, self).__init__()
+        self.lut = Embedding(input_dim=vocab, output_dim=d_model)
+        self.d_model = d_model
+
+    def call(self, x):
+        return self.lut(x) * math.sqrt(self.d_model)
+
+
+class LayerNorm(Layer):
+    """
+    >>> ln = LayerNorm(features=12)
+    >>> x = K.constant([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]); print(x, x.shape)  # one token with d_model=12
+    >>> y = K.eval(ln(x))
+    >>>
+    """
+
+    def __init__(self, features, eps=1e-6):
+        super(LayerNorm, self).__init__()
+        self.features = features  # d_model
+        self.eps = eps
+        self.a_2 = None
+        self.b_2 = None
+
+    def build(self, _):
+        """
+        weights are shared for all layer normalization.
+            according to description of add_weight function
+            'Adds a new variable to the layer, or gets an existing one; returns it'
+
+        Parameters
+        ----------
+        _
+
+        Returns
+        -------
+
+        """
+        self.a_2 = self.add_weight(
+            name='layer_norm_scale',
+            shape=(self.features,),
+            initializer='ones',
+            trainable=True
+        )
+        self.b_2 = self.add_weight(
+            name='layer_norm_bias',
+            shape=(self.features,),
+            initializer='zeros',
+            trainable=True
+        )
+        return super(LayerNorm, self).build(self.features)
+
+    def call(self, x):
+        mean = K.mean(x=x, axis=-1, keepdims=True)
+        std = K.std(x=x, axis=-1, keepdims=True)
+        return self.a_2 * (x - mean) / (std + self.eps) + self.b_2
+
+
+class Generator(Layer):
+    """
+    linear + softmax for final output layer.
+
+    >>> ge = Generator(d_model=12, vocab=7)
+    >>> x = K.constant([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]); print(x, x.shape)  # output of final layer
+    >>> y = ge(x)
+    >>> out = K.eval(y)
+    >>> print(out, out.shape, K.eval(K.argmax(out)))
+    """
+
+    def __init__(self, d_model, vocab):
+        """
+
+        Parameters
+        ----------
+        d_model: hidden size
+        vocab: size of token dict
+        """
+        super(Generator, self).__init__()
+        self.proj = Dense(input_shape=(d_model,), units=vocab)
+
+    def call(self, x):
+        """
+        softmax followed by log is not stable,
+        need to use log_softmax after upgrade to tf 2.0
+        """
+        return K.log(x=K.softmax(x, axis=-1))
+
+
+if __name__ == '__main__':
+    max_words_in_sentence = 4  # of words in each sentence
+    batch_size = 5  # of sentences
+    size_dict = 7  # size of word dictionary
+    d_model = 12
+    hidden_size_pff = 11
+    num_head = 2
+    dropout_rate = 0.1
+    num_encoder_layer = 2
+    learning_rate = 0.001
+
+    # x = Input(shape=(max_words_in_sentence,))
+    src = K.constant([[0, 3, 0, 2],
+                      [1, 0, 3, 2],
+                      [0, 0, 0, 1],
+                      [1, 0, 0, 1],
+                      [3, 2, 2, 1]]); print(src, src.shape)
+    src_mask = K.constant([[[1, 1, 1, 1]],
+                           [[1, 1, 1, 1]],
+                           [[1, 1, 1, 1]],
+                           [[1, 1, 1, 1]],
+                           [[1, 1, 1, 1]]]); print(src_mask, src_mask.shape)
+    x = Embeddings(d_model=d_model, vocab=size_dict)(src)  # embedding on 12 dim for 7 tokens total.
+    x = PositionalEncoding(d_model=d_model, dropout=Dropout(rate=0.1))(x)
+    out = K.eval(x)
+    print(out, out.shape)

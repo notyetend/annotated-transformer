@@ -88,7 +88,12 @@ class LayerNormP(nn.Module):
 
     def forward(self, x):
         mean = x.mean(-1, keepdim=True)
-        std = x.std(-1, keepdim=True)
+        # std = x.std(-1, keepdim=True)
+        std = x.std(-1, keepdim=True, unbiased=False)  # changed @@@
+        """
+        default value of unbiased is True. because Keras only provide biased std. 
+        for comparison purpose, changed to use biased std.
+        """
         return self.a_2 * (x - mean) / (std + self.eps) + self.b_2
 
 

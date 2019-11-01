@@ -30,6 +30,13 @@ def pre_floor(a, precision=5):
 
 
 def test_positional_encoding():
+    """
+    >>> test_positional_encoding()
+
+    Returns
+    -------
+
+    """
     dummy_emb_np = np.random.rand(batch_size, max_words_in_sentence, d_model).astype('float32')
 
     # pytorch
@@ -47,3 +54,69 @@ def test_positional_encoding():
     print(np.equal(out_pe_p, out_pe_k), np.array_equal(out_pe_p, out_pe_k))
 
     assert np.array_equal(out_pe_p, out_pe_k)
+
+
+def test_embeddings():
+    """
+
+    Returns
+    -------
+
+    """
+    dummy_weight = np.random.rand(size_dict, d_model).astype('float32')
+    dummy_batch = np.random.randint(low=0, high=max_words_in_sentence, size=(batch_size, max_words_in_sentence))
+
+    # pytorch
+    emb_p = EmbeddingsP(d_model=d_model, vocab=size_dict, weight=dummy_weight)
+    out_emb_p = emb_p(torch.from_numpy(dummy_batch).to(torch.int64))
+    """
+    w/o '.to(torch.int64)' you will get below error.
+        RuntimeError: Expected tensor for argument #1 'indices' to have scalar type Long; but got torch.IntTensor instead 
+        (while checking arguments for embedding)
+    """
+
+    # keras
+    emb_k = EmbeddingsK(d_model=d_model, vocab=size_dict, weight=dummy_weight)
+    out_emb_k = emb_k(K.constant(dummy_batch))
+    out_emb_k = K.eval(out_emb_k)
+
+    assert np.array_equal(out_emb_p, out_emb_k)
+
+
+def test_layer_norm():
+    dummy_weight = np.random.rand(batch_size, max_words_in_sentence, d_model).astype('float32')
+
+    # pytorch
+    ln_p = LayerNormP(features=d_model)
+    out_ln_p = ln_p(torch.from_numpy(dummy_weight))
+    out_ln_p = pre_floor(out_ln_p.detach().numpy()[:])
+    out_ln_p
+
+    # keras
+    ln_k = LayerNormK(features=d_model)
+    out_ln_k = ln_k(K.constant(dummy_weight))
+    out_ln_k = K.eval(out_ln_k)
+    out_ln_k = pre_floor(out_ln_k)
+    out_ln_k
+
+    # mean comparison
+    m1 = torch.from_numpy(dummy_weight).mean(-1, keepdim=True).numpy()[:]
+    m2 = K.eval(K.mean(K.constant(dummy_weight), axis=-1, keepdims=True))
+    assert np.array_equal(m1, m2)
+
+    # std comparison
+    """original implementation of havardnlp use unbiased std(default option for torch.tensor.std)
+    as keras don't provide unbiased std, I changed torch code to use biased std."""
+    s1 = torch.from_numpy(dummy_weight).std(-1, keepdim=True).numpy()[:][0, :, :]
+    s2 = K.eval(K.std(K.constant(dummy_weight), axis=-1, keepdims=True))[0, :, :]
+    assert not np.array_equal(pre_floor(s1), pre_floor(s2))
+
+    s1 = torch.from_numpy(dummy_weight).std(-1, unbiased=False, keepdim=True).numpy()[:][0, :, :]
+    s2 = K.eval(K.std(K.constant(dummy_weight), axis=-1, keepdims=True))[0, :, :]
+    assert np.array_equal(pre_floor(s1), pre_floor(s2))
+
+    assert out_ln_p.shape == out_ln_k.shape
+    assert np.array_equal(out_ln_p, out_ln_k)
+
+
+

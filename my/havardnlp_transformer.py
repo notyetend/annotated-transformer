@@ -145,6 +145,8 @@ class SublayerConnectionP(nn.Module):
 class EncoderLayerP(nn.Module):
     """
     Encoder is made up of self-attn and feed forward (defined below)
+
+
     """
 
     def __init__(self, size, self_attn, feed_forward, dropout):
@@ -244,7 +246,7 @@ def attention_p(q_w_q, k_w_k, v_w_v, mask=None, dropout=None):
     d_k = q_w_q.size(-1)
     scores = torch.matmul(q_w_q, k_w_k.transpose(-2, -1)) / math.sqrt(d_k)
     if mask is not None:
-        scores = scores.masked_fill(mask == 0, -1e9)  # Fills elements of tensor with value where mask is one.
+        scores = scores.masked_fill(mask == 0, -1e9)  # Fills scores where mask is zero
     p_attn = F.softmax(scores, dim=-1)
     if dropout is not None:
         p_attn = dropout(p_attn)
@@ -253,12 +255,13 @@ def attention_p(q_w_q, k_w_k, v_w_v, mask=None, dropout=None):
 
 class MultiHeadedAttentionP(nn.Module):
     """
-    q = torch. @@@
-    mha = MultiHeadedAttention(h=8, d_model=512)
-    mha.forward()
+
     """
     def __init__(self, h, d_model, dropout=0.1):
-        """Take in model size and number of heads."""
+        """Take in model size and number of heads.
+
+        h: number of heads
+        """
         super(MultiHeadedAttentionP, self).__init__()
         assert d_model % h == 0
         # We assume d_v always equals d_k
@@ -519,7 +522,7 @@ class BatchP:
             self.ntokens = (self.trg_y != pad).data.sum()  # where this used for???
 
     @staticmethod
-    def make_std_mask(tgt, pad):
+    def make_std_mask(trg, pad):
         """
         Create a mask to hide padding and future words.
 
@@ -532,7 +535,7 @@ class BatchP:
         >>> tgt = trg[:, :-1]
         >>> pad = 0
         """
-        tgt_mask = (tgt != pad).unsqueeze(-2)  # for example, turn [5, 3] to [5, 1, 3]
+        tgt_mask = (trg != pad).unsqueeze(-2)  # for example, turn [5, 3] to [5, 1, 3]
         """
         >>> (tgt != pad).shape  # (5, 3)
         >>> tgt_mask = (tgt != pad).unsqueeze(-2)  # [5, 1, 3]
@@ -545,7 +548,7 @@ class BatchP:
                 dtype=torch.uint8)  # [5, 1, 3]    
         """
         tgt_mask = tgt_mask & Variable(
-            subsequent_mask_p(size=tgt.size(-1)).type_as(tgt_mask.data)
+            subsequent_mask_p(size=trg.size(-1)).type_as(tgt_mask.data)
         )
         """
         >>> tgt.size(-1)  # 3

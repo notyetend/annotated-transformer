@@ -1,129 +1,48 @@
-from havardnlp_transformer import *
+def utf16_decimals(char, chunk_size=2):
+    # encode the character as big-endian utf-16
+    encoded_char = char.encode('utf-16-be')
+
+    # convert every `chunk_size` bytes to an integer
+    decimals = []
+    for i in range(0, len(encoded_char), chunk_size):
+        chunk = encoded_char[i:i+chunk_size]
+        decimals.append(int.from_bytes(chunk, 'big'))
+
+    return decimals
 
 
+class JamosSeparator:
+    def __init__(self, string):
+        self.string = string
+        self.result = []
+        self.choseong_list = [char for char in "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"]
+        self.jungseong_list = [char for char in "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ"]
+        self.jongseong_list = [char for char in " ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ"]
 
-def data_gen(V, batch, nbatches, max_words_in_sentence):
-    """
-    Generate random data for a src-tgt copy task.
+    def run(self):
+        for char in self.string:
 
-    # 5: # of sentences
-    # 4: # of words in each sentence
-    # 7: size of word dictionary
-    np.random.randint(low=1, high=7, size=(5, 4))  # 5 by 4 matrix
+            character_code = ord(char)
 
-    >>> gen = data_gen(7, 5, 2)
-    >>> b0 = next(gen)
-    >>> b0.src
-    tensor([[1, 2, 3, 2],
-            [1, 2, 1, 4],
-            [1, 2, 4, 5],
-            [1, 1, 2, 1],
-            [1, 2, 5, 5]])  # [5, 4]
-    >>> b0.src_mask
-    tensor([[[1, 1, 1, 1]],
-            [[1, 1, 1, 1]],
-            [[1, 1, 1, 1]],
-            [[1, 1, 1, 1]],
-            [[1, 1, 1, 1]]], dtype=torch.uint8)  # [5, 1, 4]
-    >>> b0.trg
-    tensor([[1, 2, 3],
-            [1, 2, 1],
-            [1, 2, 4],
-            [1, 1, 2],
-            [1, 2, 5]])  # [5, 3]
-    >>> b0.trg_y
-    tensor([[2, 3, 2],
-            [2, 1, 4],
-            [2, 4, 5],
-            [1, 2, 1],
-            [2, 5, 5]])  # [5, 3]
-    >>> b0.trg_mask
-    tensor([[[1, 0, 0],
-             [1, 1, 0],
-             [1, 1, 1]],
-            [[1, 0, 0],
-             [1, 1, 0],
-             [1, 1, 1]],
-            [[1, 0, 0],
-             [1, 1, 0],
-             [1, 1, 1]],
-            [[1, 0, 0],
-             [1, 1, 0],
-             [1, 1, 1]],
-            [[1, 0, 0],
-             [1, 1, 0],
-             [1, 1, 1]]], dtype=torch.uint8)  # [5, 3, 3]
+            # Do not process unless it is in Hangul syllables range.
+            if 0xD7A3 < character_code or character_code < 0xAC00:
+                continue
 
-    >>> b0.ntokens
+            choseong_index = (character_code - 0xAC00) // 21 // 28
+            jungseong_index = (character_code - 0xAC00 - (choseong_index * 21 * 28)) // 28
+            jongseong_index = character_code - 0xAC00 - (choseong_index * 21 * 28) - (jungseong_index * 28)
 
-    >>> b0.src.shape  # (5, 4)
-    """
-    for i in range(nbatches):
-        data = torch.from_numpy(np.random.randint(low=1, high=V, size=(batch, max_words_in_sentence)))
-        data[:, 0] = 1  # 1 for first column
-        src = Variable(data, requires_grad=False)
-        tgt = Variable(data, requires_grad=False)
-        yield BatchP(src, tgt, 0)
+            self.result.append(self.choseong_list[choseong_index])
+            self.result.append(self.jungseong_list[jungseong_index])
+            self.result.append(self.jongseong_list[jongseong_index])
+            self.result.append("_")
+
+    def get(self):
+        return self.result
 
 
-# ##### params
-max_words_in_sentence = 4  # of words in each sentence
-batch_size = 5  # of sentences
-size_dict = 7  # size of word dictionary
-d_model = 12
-hidden_size_pff = 11
-num_head = 2
-dropout_rate = 0.1
-# model = make_model(
-#     src_vocab=size_dict,
-#     tgt_vocab=size_dict,
-#     N=2  # num of transformer unit
-# )
-
-# ##### data that is composed of sentence which is sequence of word index.
-np.random.seed(0)
-gen_batch = data_gen(V=size_dict, batch=batch_size, nbatches=2, max_words_in_sentence=max_words_in_sentence)
-batch0 = next(gen_batch)
-batch0.src
-batch0.src_mask
-batch0.trg
-batch0.trg_mask
-
-# making input to encoder
-em = EmbeddingsP(d_model=d_model, vocab=size_dict)
-pe = PositionalEncodingP(d_model=d_model, dropout=dropout_rate)
-o_pe = pe(em(batch0.src))  # input to encoder, [5, 4, 12]
-
-
-class MySublayerConnection(nn.Module):
-    def __init__(self, size, dropout_rate):
-        super(MySublayerConnection, self).__init__()
-        self.norm = nn.LayerNorm(size)
-        self.dropout = nn.Dropout(dropout_rate)
-
-    def forward(self, x, sublayer):
-        return x + self.dropout(sublayer(self.norm(x)))
-
-
-class MyEncoderLayer(nn.Module):
-    """
-    >>> el = MyEncoderLayer(d_model, dropout_rate, num_head, hidden_size_pff)
-    >>> el.forward(o_pe, batch0.src_mask)
-    """
-    def __init__(self, size, dropout_rate, num_head, hidden_size_pff):
-        """
-
-        :param size: last dim of input and output
-        :param dropout_rate:
-        :param num_head:
-        :param hidden_size_pff:
-        """
-        super(MyEncoderLayer, self).__init__()
-        self.size = size
-        self.sublayers = clones_p(MySublayerConnection(size, dropout_rate), 2)
-        self.mha = MultiHeadedAttentionP(h=num_head, d_model=size)  # 1st sublayer
-        self.pff = PositionwiseFeedForwardP(d_model=size, d_ff=hidden_size_pff)  # 2nd sublayer
-
-    def forward(self, x, mask):
-        o_sub_layer1 = self.sublayers[0](x, lambda x: self.mha(x, x, x, mask))
-        return self.sublayers[1](o_sub_layer1, self.pff)
+js = JamosSeparator('밥')
+js.run()
+js.get()
+for i in '밥':
+    print(ord(i))

@@ -1,4 +1,4 @@
-from havardnlp_transformer import *
+from transformer.havardnlp_transformer import *
 
 
 def data_gen(V, batch, nbatches, max_words_in_sentence):

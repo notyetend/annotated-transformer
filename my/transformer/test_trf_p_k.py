@@ -1,5 +1,5 @@
-from havardnlp_transformer import *
-from my_trf_2 import *
+from transformer.havardnlp_transformer import *
+from transformer.my_trf_2 import *
 
 max_words_in_sentence = 4  # of words in each sentence
 batch_size = 5  # of sentences

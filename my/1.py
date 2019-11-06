@@ -1,4 +1,4 @@
-from havardnlp_transformer import *
+from transformer.havardnlp_transformer import *
 
 
 

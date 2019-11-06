@@ -1,3 +1,4 @@
+import torch
 from tensorflow.python.keras.layers import BatchNormalization
 import copy
 import numpy as np
@@ -12,36 +13,9 @@ from tensorflow.python.keras.layers import (
 from tensorflow.python.keras.optimizers import Adam
 from tensorflow.python.keras import backend as K
 
-from havardnlp_transformer import *
-from my_trf_2 import *
-
-
-max_words_in_sentence = 4  # of words in each sentence
-batch_size = 5  # of sentences
-size_dict = 7  # size of word dictionary
-d_model = 12
-hidden_size_pff = 11
-num_head = 2
-dropout_rate = 0.1
-num_encoder_layer = 2
-learning_rate = 0.001
-
-src_np = [[0, 3, 0, 2],
-          [1, 0, 3, 2],
-          [0, 0, 0, 1],
-          [1, 0, 0, 1],
-          [3, 2, 2, 1]]
-
-src_mask_np = [[[1, 1, 1, 1]],
-               [[1, 1, 1, 1]],
-               [[1, 1, 1, 1]],
-               [[1, 1, 1, 1]],
-               [[1, 1, 1, 1]]]
-
-
-def pre_floor(a, precision=5):
-    """ floor with precision """
-    return np.round(a - 0.5 * 10**(-precision), precision)
+from transformer.reference.harvardnlp_transformer import *
+from transformer.harvardnlp_transformer_keras import *
+from transformer.test_config import *
 
 
 def test_positional_encoding():
@@ -262,6 +236,69 @@ def test_batch():
     assert np.array_equal(ba_p.trg_mask.numpy(), K.eval(ba_k.trg_mask))
 
 
+def test_masked_fill():
+    assert d_model % num_head == 0
+
+    # dummy data
+    d_k = d_v = d_model // num_head  # dim of query and key is d_k
+    dummy_q_w_q = np.random.rand(batch_size, num_head, max_words_in_sentence, d_k).astype('float32')
+    print(dummy_q_w_q.shape)
+    dummy_k_w_k = np.random.rand(batch_size, num_head, max_words_in_sentence, d_k).astype('float32')
+    dummy_v_w_v = np.random.rand(batch_size, num_head, max_words_in_sentence, d_v).astype('float32')
+    dummy_batch = np.random.randint(low=1, high=max_words_in_sentence, size=(batch_size, max_words_in_sentence))
+    dummy_batch = dummy_batch.astype('int64')
+    dummy_batch[:, 0] = 1
+    pad = 0
+
+    # pytorch - scores
+    q_w_q = torch.from_numpy(dummy_q_w_q)
+    k_w_k = torch.from_numpy(dummy_k_w_k)
+    d_k = q_w_q.size(-1)
+    scores_p = torch.matmul(q_w_q, k_w_k.transpose(-2, -1)) / math.sqrt(d_k)
+    scores_p
+    scores_p.shape  # (5, 2, 4, 4), each dim represents (batch, head, tokes is sentence(query), tokens in sentence(key))
+
+    # scores_p = torch.from_numpy(np.random.randint(low=1, high=max_words_in_sentence, size=(5, 2, 4, 4)).astype('float32'))
+
+    # pytorch - masking
+    src = torch.from_numpy(dummy_batch)
+    trg = torch.from_numpy(dummy_batch)
+    ba_p = BatchP(src=src, trg=trg, pad=pad)
+    src_mask = ba_p.src_mask
+    src_mask
+    src_mask.shape  # (5, 1, 4)
+    src_mask = src_mask.unsqueeze(1)
+    src_mask.shape  # (5, 1, 1, 4)
+    # (5, 1, 1, 4), each dim represents (batch, head, tokes is sentence(query), tokens in sentence(key))
+    # dim(2) will be expanded to 4. this means we masking same keys for all query.
+    scores_masked_p = scores_p.masked_fill(src_mask == 0, -1e9)
+    # torch.mul(scores, (src_mask != 0).float()) + (src_mask == 0).float() * (-1e9)
+
+
+    # keras - scores
+    q_w_q = K.constant(dummy_q_w_q)
+    k_w_k = K.constant(dummy_k_w_k)
+    d_k = q_w_q.shape.as_list()[-1]
+    scores_k = K.batch_dot(q_w_q, k_w_k, axes=[3, 3]) / math.sqrt(d_k)
+    assert np.array_equal(pre_floor((scores_p.numpy())), pre_floor(K.eval(scores_k)))
+
+    # keras - masking
+    src = K.constant(dummy_batch)
+    trg = K.constant(dummy_batch)
+    ba_k = BatchK(src=src, trg=trg, pad=pad)
+    src_mask = ba_k.src_mask
+    src_mask.shape
+    src_mask = K.expand_dims(src_mask, axis=1)
+    src_mask.shape
+
+    def keras_masked_fill(x, mask, target_mask_val, filled_value=-1e9):
+        return x * (x != target_mask_val) + (mask == target_mask_val) * filled_value
+    scores_masked_k = keras_masked_fill(scores_k, src_mask, 0, -1e9)
+    K.eval(scores_masked_k)
+
+    assert np.array_equal(pre_floor(scores_masked_p.numpy()), pre_floor(K.eval(scores_masked_k)))
+
+
 def test_attention():
     assert d_model % num_head == 0
 
@@ -272,7 +309,6 @@ def test_attention():
     dummy_v_w_v = np.random.rand(batch_size, num_head, max_words_in_sentence, d_v)
 
     dummy_src_mask = np.ones(shape=(batch_size, 1, max_words_in_sentence), dtype='uint8')
-
 
 
     dummy_weight = np.random.rand(size_dict, d_model).astype('float32')
@@ -299,41 +335,6 @@ def test_attention():
     d_k = q_w_q.shape.as_list()[-1]
     scores = K.batch_dot(K.constant(dummy_q_w_q), K.constant(dummy_k_w_k), axes=[3, 3]) / math.sqrt(d_k)
     scores = K.eval(scores)
-
-
-def test_masked_fill():
-    assert d_model % num_head == 0
-
-    d_k = d_v = d_model // num_head  # dim of query and key is d_k
-    dummy_q_w_q = np.random.rand(batch_size, num_head, max_words_in_sentence, d_k)
-    print(dummy_q_w_q.shape)
-    dummy_k_w_k = np.random.rand(batch_size, num_head, max_words_in_sentence, d_k)
-    dummy_v_w_v = np.random.rand(batch_size, num_head, max_words_in_sentence, d_v)
-
-    # pytorch
-    q_w_q = torch.from_numpy(dummy_q_w_q)
-    k_w_k = torch.from_numpy(dummy_k_w_k)
-    d_k = q_w_q.size(-1)
-    scores = torch.matmul(q_w_q, k_w_k.transpose(-2, -1)) / math.sqrt(d_k)
-    scores
-    scores.shape
-
-    dummy_batch = np.random.randint(low=1, high=max_words_in_sentence, size=(batch_size, max_words_in_sentence))
-    dummy_batch[:, 0] = 1
-    dummy_batch = dummy_batch.astype('uint8')
-    pad = 0
-
-    # pytorch
-    src = torch.from_numpy(dummy_batch)
-    trg = torch.from_numpy(dummy_batch)
-    ba_p = BatchP(src=src, trg=trg, pad=pad)
-    src_mask = ba_p.src_mask
-    src_mask
-    src_mask.shape
-    src_mask = src_mask.unsqueeze(1)
-    src_mask.shape
-
-    scores.masked_fill(src_mask == 0, -1e9)
 
 
 def test_multi_head_attention():

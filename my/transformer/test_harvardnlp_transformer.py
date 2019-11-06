@@ -1,4 +1,7 @@
-from transformer.havardnlp_transformer import *
+import torch
+
+from transformer import test_config
+from transformer.reference.harvardnlp_transformer import *
 
 
 def data_gen(V, batch, nbatches, max_words_in_sentence):
@@ -11,35 +14,35 @@ def data_gen(V, batch, nbatches, max_words_in_sentence):
     np.random.randint(low=1, high=7, size=(5, 4))  # 5 by 4 matrix
 
     >>> gen = data_gen(7, 5, 2, 4)
-    >>> b0 = next(gen)
-    >>> b0.src
-    >>> b0.trg
-    >>> b0.src.shape  # [5, 4]
-    >>> b0.ntokens  # 15
+    >>> batch0 = next(gen)
+    >>> batch0.src
+    >>> batch0.trg
+    >>> batch0.src.shape  # [5, 4]
+    >>> batch0.ntokens  # 15
     tensor([[1, 2, 3, 2],
             [1, 2, 1, 4],
             [1, 2, 4, 5],
             [1, 1, 2, 1],
             [1, 2, 5, 5]])  # [5, 4]
-    >>> b0.src_mask
+    >>> batch0.src_mask
     tensor([[[1, 1, 1, 1]],
             [[1, 1, 1, 1]],
             [[1, 1, 1, 1]],
             [[1, 1, 1, 1]],
             [[1, 1, 1, 1]]], dtype=torch.uint8)  # [5, 1, 4]
-    >>> b0.trg
+    >>> batch0.trg
     tensor([[1, 2, 3],
             [1, 2, 1],
             [1, 2, 4],
             [1, 1, 2],
             [1, 2, 5]])  # [5, 3]
-    >>> b0.trg_y
+    >>> batch0.trg_y
     tensor([[2, 3, 2],
             [2, 1, 4],
             [2, 4, 5],
             [1, 2, 1],
             [2, 5, 5]])  # [5, 3]
-    >>> b0.trg_mask
+    >>> batch0.trg_mask
     tensor([[[1, 0, 0],
              [1, 1, 0],
              [1, 1, 1]],
@@ -56,9 +59,9 @@ def data_gen(V, batch, nbatches, max_words_in_sentence):
              [1, 1, 0],
              [1, 1, 1]]], dtype=torch.uint8)  # [5, 3, 3]
 
-    >>> b0.ntokens  # 15
+    >>> batch0.ntokens  # 15
 
-    >>> b0.src.shape  # (5, 4)
+    >>> batch0.src.shape  # (5, 4)
     """
     for _ in range(nbatches):
         data = torch.from_numpy(np.random.randint(low=1, high=V, size=(batch, max_words_in_sentence)))
@@ -237,48 +240,6 @@ class MyEncoder(nn.Module):
         return self.norm(x)
 
 
-##############################
-test = False
-if test:
-    # data for decoder
-    batch0.trg
-    batch0.trg_mask
-    el = MyEncoderLayer(d_model, dropout_rate, num_head, hidden_size_pff)
-    encoder = MyEncoder(el, 6)
-    o_encoder = encoder.forward(o_pe, batch0.src_mask)  # [5, 4, 12]
-
-    # making input to encoder
-    em = EmbeddingsP(d_model=d_model, vocab=size_dict)
-    pe = PositionalEncodingP(d_model=d_model, dropout=dropout_rate)
-    o_pe_decoder = pe(em(batch0.trg))  # input to encoder, [5, 4, 12]
-
-    # decoder layer v1 ##############################
-    self_attn = MultiHeadedAttentionP(h=num_head, d_model=d_model)
-    src_attn = MultiHeadedAttentionP(h=num_head, d_model=d_model)
-    pff = PositionwiseFeedForwardP(d_model=d_model, d_ff=hidden_size_pff)
-
-    # first input: output of embedding and positional encoding for decoder
-    # second input: output of encoder this is used as key and value,
-    #   output of previous sublayer this is used as query
-    sublayers = clones_p(MySublayerConnection(d_model, dropout_rate), 3)
-    o_sublayer0 = sublayers[0](o_pe_decoder, lambda x: self_attn(
-        query=o_pe_decoder,
-        key=o_pe_decoder,
-        value=o_pe_decoder,
-        mask=batch0.trg_mask))
-    o_sublayer1 = sublayers[1](o_sublayer0, lambda x: src_attn(
-        query=o_sublayer0,
-        key=o_encoder,
-        value=o_encoder,
-        mask=batch0.src_mask))  # why use src_mask, not trg_mask???
-    # -> 이미 이런 단계(sublayers[0])에서 타겟 문장의 정보를 필터링 했으므로, 추가로 필터링 할 필요가 없어 보인다.
-    o_sublayer2 = sublayers[2](o_sublayer1, pff)
-    o_sublayer2.shape
-
-
-##############################
-
-
 # decoder layer v2  ##############################
 class MyDecoderLayer(nn.Module):
     """
@@ -353,8 +314,8 @@ if __name__ == '__main__':
 
     # ##### data that is composed of sentence which is sequence of word index.
     np.random.seed(0)
-    # gen_batch = data_gen(V=size_dict, batch=batch_size, nbatches=2, max_words_in_sentence=max_words_in_sentence)
-    # batch0 = next(gen_batch)
+    gen_batch = data_gen(V=size_dict, batch=batch_size, nbatches=2, max_words_in_sentence=max_words_in_sentence)
+    batch0 = next(gen_batch)
     # batch0.src; batch0.src.shape
     # batch0.src_mask; batch0.src_mask.shape
     # batch0.trg
@@ -373,3 +334,40 @@ if __name__ == '__main__':
     em = EmbeddingsP(d_model=d_model, vocab=size_dict)
     pe = PositionalEncodingP(d_model=d_model, dropout=0.)
     o_pe = pe(em(src))  # input to encoder, [5, 4, 12]
+
+
+
+    # data for decoder
+    batch0.trg
+    batch0.trg_mask
+    el = MyEncoderLayer(d_model, dropout_rate, num_head, hidden_size_pff)
+    encoder = MyEncoder(el, 6)
+    o_encoder = encoder.forward(o_pe, batch0.src_mask)  # [5, 4, 12]
+
+    # making input to encoder
+    em = EmbeddingsP(d_model=d_model, vocab=size_dict)
+    pe = PositionalEncodingP(d_model=d_model, dropout=dropout_rate)
+    o_pe_decoder = pe(em(batch0.trg))  # input to encoder, [5, 4, 12]
+
+    # decoder layer v1 ##############################
+    self_attn = MultiHeadedAttentionP(h=num_head, d_model=d_model)
+    src_attn = MultiHeadedAttentionP(h=num_head, d_model=d_model)
+    pff = PositionwiseFeedForwardP(d_model=d_model, d_ff=hidden_size_pff)
+
+    # first input: output of embedding and positional encoding for decoder
+    # second input: output of encoder this is used as key and value,
+    #   output of previous sublayer this is used as query
+    sublayers = clones_p(MySublayerConnection(d_model, dropout_rate), 3)
+    o_sublayer0 = sublayers[0](o_pe_decoder, lambda x: self_attn(
+        query=o_pe_decoder,
+        key=o_pe_decoder,
+        value=o_pe_decoder,
+        mask=batch0.trg_mask))
+    o_sublayer1 = sublayers[1](o_sublayer0, lambda x: src_attn(
+        query=o_sublayer0,
+        key=o_encoder,
+        value=o_encoder,
+        mask=batch0.src_mask))  # why use src_mask, not trg_mask???
+    # -> 이미 이런 단계(sublayers[0])에서 타겟 문장의 정보를 필터링 했으므로, 추가로 필터링 할 필요가 없어 보인다.
+    o_sublayer2 = sublayers[2](o_sublayer1, pff)
+    o_sublayer2.shape

@@ -15,7 +15,7 @@ def data_gen(V, batch, nbatches, max_words_in_sentence):
     >>> b0.src
     >>> b0.trg
     >>> b0.src.shape  # [5, 4]
-    >>> b0.ntokens
+    >>> b0.ntokens  # 15
     tensor([[1, 2, 3, 2],
             [1, 2, 1, 4],
             [1, 2, 4, 5],

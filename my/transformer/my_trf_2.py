@@ -9,6 +9,7 @@ Converting 'https://nlp.seas.harvard.edu/2018/04/03/attention.html'
  to Keras implementation.
 
 """
+import copy
 import numpy as np
 import math
 import matplotlib.pyplot as plt
@@ -128,6 +129,8 @@ class EmbeddingsK(Layer):
 
 class LayerNormK(Layer):
     """
+    btw in TF2.0, LayerNormalization functionality is provided.
+
     >>> ln = LayerNormK(features=12)
     >>> x = K.constant([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]); print(x, x.shape)  # one token with d_model=12
     >>> y = K.eval(ln(x))
@@ -203,6 +206,107 @@ class GeneratorK(Layer):
         need to use log_softmax after upgrade to tf 2.0
         """
         return K.log(x=K.softmax(x, axis=-1))
+
+
+def subsequent_mask_k(size):
+    """
+    Mask out subsequent positions.
+
+    >>> subsequent_mask(3)
+    tensor([
+            [
+                [1, 0, 0],
+                [1, 1, 0],
+                [1, 1, 1]
+            ]], dtype=torch.uint8)  # [1, 3, 3]
+
+    This function gives mask for a sentence with 'size' words.
+
+    """
+    attn_shape = (1, size, size)
+    subsequent_mask = np.triu(np.ones(attn_shape), k=1).astype('uint8')
+    return K.equal(K.constant(subsequent_mask), 0)
+
+
+class BatchK:
+    def __init__(self, src, trg=None, pad=0):
+        self.src = src
+        self.src_mask = K.expand_dims(K.not_equal(src, pad), axis=-2)
+
+        if trg is not None:
+            self.trg = trg[:, :-1]  # without last token of sentence
+            self.trg_y = trg[:, 1:]  # without first token of sentence
+            self.trg_mask = self.make_std_mask(self.trg, pad)
+            self.ntokens = K.sum(K.cast(K.not_equal(self.trg_y, pad), dtype='uint8'))
+
+    @staticmethod
+    def make_std_mask(trg, pad):
+        trg_mask = K.expand_dims(K.not_equal(trg, pad), axis=-2)
+
+        trg_mask = trg_mask & subsequent_mask_k(size=trg.shape.as_list()[-1])
+
+        return trg_mask
+
+
+class EncoderLayerK(Layer):
+    """
+
+    """
+    def __init__(self):
+        super(EncoderLayerK, self).__init__()
+        # ToDo: implement
+
+
+def clones_k(module, N):
+    """
+    >>> d = Dense(input_shape=(d_model,), units=d_model)
+    >>> d_list = clones_k(d, 4)
+
+
+    Parameters
+    ----------
+    module: layer to be copied
+    N: number of copy
+
+    Returns
+    -------
+
+    """
+    # return [copy.deepcopy(module) for _ in range(N)]  # probability not working
+
+    # reference: https://keras.io/layers/about-keras-layers/
+    config = module.get_config()
+    return [type(module).from_config(config) for _ in range(N)]
+
+
+def attention_k(q_w_q, k_w_k, v_w_v, mask=None, dropout=None):
+    pass
+
+
+class MultiHeadedAttentionK(Layer):
+    """
+
+    """
+    def __init__(self, h, d_model, dropout=0.1):
+        """
+
+        Parameters
+        ----------
+        h: number of heads
+        d_model:
+        """
+        super(MultiHeadedAttentionK, self).__init__()
+        assert d_model % h == 0
+
+        self.d_k = d_model // h  # d_k = d_v = d_model/h
+        self.h = h  # number of heads
+        self.linears = clones_k(Dense(input_shape=(d_model,), units=d_model))
+        self.attn = None
+        self.dropout = Dropout(rate=dropout)
+
+    def forward(self, query, key, value, mask=None):
+        pass
+        # ToDo: Implement
 
 
 if __name__ == '__test__':

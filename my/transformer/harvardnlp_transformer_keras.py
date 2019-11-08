@@ -8,6 +8,7 @@ Converting 'https://nlp.seas.harvard.edu/2018/04/03/attention.html'
  which is pytorch implementation
  to Keras implementation.
 
+# ToDo: copy layer test with simple multi hidden layer regression.
 """
 import copy
 import numpy as np

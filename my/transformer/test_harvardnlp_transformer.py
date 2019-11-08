@@ -1,7 +1,4 @@
-import torch
-
-from transformer import test_config
-from transformer.reference.harvardnlp_transformer import *
+from transformer.harvardnlp_transformer import *
 
 
 def data_gen(V, batch, nbatches, max_words_in_sentence):

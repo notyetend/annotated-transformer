@@ -1,19 +1,4 @@
-import torch
-from tensorflow.python.keras.layers import BatchNormalization
-import copy
-import numpy as np
-import math
-import matplotlib.pyplot as plt
-from functools import partial
-
-from tensorflow.python.keras.models import Model
-from tensorflow.python.keras.layers import (
-    Dense, Flatten, Conv1D, Dropout, Embedding, Input, Lambda, Layer, Softmax
-)
-from tensorflow.python.keras.optimizers import Adam
-from tensorflow.python.keras import backend as K
-
-from transformer.reference.harvardnlp_transformer import *
+from transformer.harvardnlp_transformer import *
 from transformer.harvardnlp_transformer_keras import *
 from transformer.test_config import *
 

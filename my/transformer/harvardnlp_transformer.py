@@ -257,17 +257,24 @@ class MultiHeadedAttentionP(nn.Module):
     """
 
     """
-    def __init__(self, h, d_model, dropout=0.1):
+    def __init__(self, h, d_model, dropout=0.1, linears=None):
         """Take in model size and number of heads.
 
         h: number of heads
+        linears: added by kdw to test fixed weight linear.
         """
         super(MultiHeadedAttentionP, self).__init__()
         assert d_model % h == 0
         # We assume d_v always equals d_k
         self.d_k = d_model // h  # d_k = d_v = d_model/h
         self.h = h  # number of heads
-        self.linears = clones_p(nn.Linear(d_model, d_model), 4)
+
+        if linears:
+            assert len(linears) == 4
+            self.linears = linears
+        else:
+            self.linears = clones_p(nn.Linear(d_model, d_model), 4)
+
         """
         : 4 copies for W^Q, W^K, W^V and W^O (refers to page 5 of paper)
         : actually W^{Q, K, V} is for h heads, 

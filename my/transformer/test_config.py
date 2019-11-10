@@ -24,6 +24,6 @@ src_mask_np = [[[1, 1, 1, 1]],
                [[1, 1, 1, 1]]]
 
 
-def pre_floor(a, precision=5):
+def pf(a, precision=3):
     """ floor with precision """
     return np.round(a - 0.5 * 10**(-precision), precision)

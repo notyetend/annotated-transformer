@@ -499,3 +499,19 @@ def test_multi_head_attention():
     o_mha_k = mha_k([q_k, k_k, v_k, src_mask_k])
 
     assert np.array_equal(pf(o_mha_p.detach().numpy()), pf(K.eval(o_mha_k)))
+
+
+def test_sublayer_connection():
+    dummy_mha_out = np.random.rand(batch_size, max_words_in_sentence, d_model).astype('float32')
+
+    # pytorch
+    input_p = torch.from_numpy(dummy_mha_out)
+    slc_p = SublayerConnectionP(size=d_model, dropout=0.)
+    mha_p = MultiHeadedAttentionP(h=num_head, d_model=d_model, dropout=0.)
+    output_slc_p = slc_p(x=input_p, sublayer=mha_p)
+
+    # keras
+    input_k = K.constant(dummy_mha_out)
+    slc_k = SublayerConnectionK(size=d_model, dropout=0.)
+    mha_k = MultiHeadedAttentionK(h=num_head, d_model=d_model, dropout=0.)
+    output_slc_k = slc_k([input_k, mha_k])

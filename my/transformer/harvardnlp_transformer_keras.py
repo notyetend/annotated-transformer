@@ -322,7 +322,7 @@ class MultiHeadedAttentionK(Layer):
             assert len(linears) == 4
             self.linears = linears
         else:
-            self.linears = clones_k(Dense(input_shape=(d_model,), units=d_model))
+            self.linears = clones_k(Dense(input_shape=(d_model,), units=d_model), 4)
 
         self.attn = None
         self.dropout = Dropout(rate=dropout)
@@ -348,6 +348,24 @@ class MultiHeadedAttentionK(Layer):
         x, self.attn = attention_k(q_w_q, k_w_k, v_w_v, mask=mask, dropout=self.dropout)
         x = K.reshape(K.permute_dimensions(x, pattern=(0, 2, 1, 3)), shape=(batch_size, -1, d_model))
         return self.linears[-1](x)
+
+
+class SublayerConnectionK(Layer):
+    def __init__(self, size, dropout):
+        """
+
+        Parameters
+        ----------
+        size: features = d_model
+        dropout: dropout rate
+        """
+        super(SublayerConnectionK, self).__init__()
+        self.norm = LayerNormK(features=size)
+        self.dropout = Dropout(rate=dropout)
+
+    def call(self, x_sublayer):
+        x, sublayer = x_sublayer
+        return x + self.dropout(sublayer(self.norm(x)))
 
 
 if __name__ == '__test__':

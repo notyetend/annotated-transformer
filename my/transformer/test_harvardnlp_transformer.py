@@ -73,12 +73,24 @@ def first_example():
         """A simple loss compute and train function."""
 
         def __init__(self, generator, criterion, opt=None):
-            self.generator = generator
-            self.criterion = criterion
+            self.generator = generator  # output of transformer unit -> linear and log_softmax
+            self.criterion = criterion  # LabelSmoothing
             self.opt = opt
 
         def __call__(self, x, y, norm):
-            x = self.generator(x)
+            """
+
+            Parameters
+            ----------
+            x: output of the transformer unit
+            y: batch.trg_y which has shape of (batch size, 'max number of tokens in sentence' - 1)
+            norm: LayerNorm layer
+
+            Returns
+            -------
+
+            """
+            x = self.generator(x)  # output of log_softmax with shape of (num_batch * batch_size, dict_size)
             norm = norm.type(torch.FloatTensor)  # added by kdw
             loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1)) / norm
             loss.backward()
@@ -103,12 +115,12 @@ def first_example():
     for epoch in range(10):
         model.train()
         run_epoch_p(
-            data_iter=data_gen(V=V, batch=5, nbatches=5, max_words_in_sentence=4),
+            data_iter=data_gen(V=V, batch=batch_size, nbatches=3, max_words_in_sentence=max_words_in_sentence),
             model=model,
             loss_compute=SimpleLossCompute(model.generator, criterion, model_opt)
         )
         model.eval()
-        print(run_epoch_p(data_gen(V=V, batch=5, nbatches=5, max_words_in_sentence=4), model,
+        print(run_epoch_p(data_gen(V=V, batch=batch_size, nbatches=3, max_words_in_sentence=max_words_in_sentence), model,
                           SimpleLossCompute(model.generator, criterion, None)))
 
 
@@ -309,6 +321,9 @@ if __name__ == '__main__':
     dropout_rate = 0.1
     num_encoder_layer = 2
 
+    # small training example
+    first_example()
+
     # ##### data that is composed of sentence which is sequence of word index.
     np.random.seed(0)
     gen_batch = data_gen(V=size_dict, batch=batch_size, nbatches=2, max_words_in_sentence=max_words_in_sentence)
@@ -331,8 +346,6 @@ if __name__ == '__main__':
     em = EmbeddingsP(d_model=d_model, vocab=size_dict)
     pe = PositionalEncodingP(d_model=d_model, dropout=0.)
     o_pe = pe(em(src))  # input to encoder, [5, 4, 12]
-
-
 
     # data for decoder
     batch0.trg

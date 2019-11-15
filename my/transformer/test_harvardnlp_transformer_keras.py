@@ -515,3 +515,19 @@ def test_sublayer_connection():
     slc_k = SublayerConnectionK(size=d_model, dropout=0.)
     mha_k = MultiHeadedAttentionK(h=num_head, d_model=d_model, dropout=0.)
     output_slc_k = slc_k([input_k, mha_k])
+
+
+def test_pytorch_etc():
+    num_batch = 3
+    dummy_out_decoder = np.random.rand(batch_size * num_batch, size_dict).astype('float32')
+    dummy_target_y = np.random.randint(low=1, high=max_words_in_sentence, size=(batch_size * num_batch))
+
+    smoothing = 0.1  # 10% smoothing
+    padding_idx = 0
+    x = torch.from_numpy(dummy_out_decoder)
+    target = torch.from_numpy(dummy_target_y)
+
+    true_dist = x.data.clone()
+    true_dist.fill_(smoothing / (size_dict - 2))  # filled with 0
+    true_dist.scatter_(1, target.data.unsqueeze(1), 1 - smoothing)
+    true_dist[:, padding_idx] = 0

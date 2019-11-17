@@ -33,6 +33,12 @@ class EncoderDecoderP(nn.Module):
                               src_mask, tgt_mask)
         return output
 
+    def encode(self, src, src_mask):
+        return self.encoder(self.src_embed(src), src_mask)
+
+    def decode(self, memory, src_mask, tgt, tgt_mask):
+        return self.decoder(self.tgt_embed(tgt), memory, src_mask, tgt_mask)
+
 
 class GeneratorP(nn.Module):
     """
@@ -705,13 +711,84 @@ class LabelSmoothingP(nn.Module):
         return self.criterion(x, Variable(true_dist, requires_grad=False))
 
 
-crit = LabelSmoothingP(5, 0, 0.1)
+def greedy_decode_p(model, src, src_mask, max_len, start_symbol):
+    memory = model.encode(src, src_mask)
+    ys = torch.ones(1, 1).fill_(start_symbol).type_as(src.data)
+    for i in range(max_len-1):
+        out = model.decode(memory, src_mask,
+                           Variable(ys),
+                           Variable(subsequent_mask_p(ys.size(1))
+                                    .type_as(src.data)))
+        prob = model.generator(out[:, -1])
+        _, next_word = torch.max(prob, dim = 1)
+        next_word = next_word.data[0]
+        ys = torch.cat([ys,
+                        torch.ones(1, 1).type_as(src.data).fill_(next_word)], dim=1)
+    return ys
 
 
-def loss_p(x):
-    d = x + 3 * 1
-    predict = torch.FloatTensor([[0, x / d, 1 / d, 1 / d, 1 / d],
-                                 ])
-    # print(predict)
-    return crit(Variable(predict.log()),
-                Variable(torch.LongTensor([1]))).data[0]
+def data_gen_p(V, batch, nbatches, max_words_in_sentence):
+    """
+    Generate random data for a src-tgt copy task.
+
+    # 5: # of sentences per batch == batch(2nd arg)
+    # 4: # of words in each sentence
+    # 7: size of word dictionary
+    np.random.randint(low=1, high=7, size=(5, 4))  # 5 by 4 matrix
+
+    >>> gen = data_gen(7, 5, 2, 4)
+    >>> batch0 = next(gen)
+    >>> batch0.src
+    >>> batch0.trg
+    >>> batch0.src.shape  # [5, 4]
+    >>> batch0.ntokens  # 15
+    tensor([[1, 2, 3, 2],
+            [1, 2, 1, 4],
+            [1, 2, 4, 5],
+            [1, 1, 2, 1],
+            [1, 2, 5, 5]])  # [5, 4]
+    >>> batch0.src_mask
+    tensor([[[1, 1, 1, 1]],
+            [[1, 1, 1, 1]],
+            [[1, 1, 1, 1]],
+            [[1, 1, 1, 1]],
+            [[1, 1, 1, 1]]], dtype=torch.uint8)  # [5, 1, 4]
+    >>> batch0.trg
+    tensor([[1, 2, 3],
+            [1, 2, 1],
+            [1, 2, 4],
+            [1, 1, 2],
+            [1, 2, 5]])  # [5, 3]
+    >>> batch0.trg_y
+    tensor([[2, 3, 2],
+            [2, 1, 4],
+            [2, 4, 5],
+            [1, 2, 1],
+            [2, 5, 5]])  # [5, 3]
+    >>> batch0.trg_mask
+    tensor([[[1, 0, 0],
+             [1, 1, 0],
+             [1, 1, 1]],
+            [[1, 0, 0],
+             [1, 1, 0],
+             [1, 1, 1]],
+            [[1, 0, 0],
+             [1, 1, 0],
+             [1, 1, 1]],
+            [[1, 0, 0],
+             [1, 1, 0],
+             [1, 1, 1]],
+            [[1, 0, 0],
+             [1, 1, 0],
+             [1, 1, 1]]], dtype=torch.uint8)  # [5, 3, 3]
+
+    >>> batch0.ntokens  # 15
+
+    >>> batch0.src.shape  # (5, 4)
+    """
+    for _ in range(nbatches):
+        data = torch.from_numpy(np.random.randint(low=1, high=V, size=(batch, max_words_in_sentence)))
+        data[:, 0] = 1  # 1 for first column
+        src = Variable(data, requires_grad=False).type(torch.long)
+        tgt = Variable(data, requires_grad=False).type(torch.long)
+        yield BatchP(src, tgt, 0)

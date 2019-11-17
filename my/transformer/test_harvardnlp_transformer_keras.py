@@ -132,7 +132,7 @@ def test_linear():
     np.random.seed(0)
     num_in_node = d_model
     num_out_node = 30
-    dummy_bias = np.zeros(num_out_node,).astype('float32')
+    dummy_bias = np.zeros(num_out_node, ).astype('float32')
     dummy_weight = np.random.rand(num_out_node, num_in_node).astype('float32')
     dummy_input = np.random.rand(batch_size, max_words_in_sentence, num_in_node).astype('float32')
     dummy_output = np.matmul(dummy_input, np.transpose(dummy_weight)) + dummy_bias
@@ -294,6 +294,7 @@ def test_masked_fill():
 
     def keras_masked_fill(x, mask, target_mask_val, filled_value=-1e9):
         return x * (x != target_mask_val) + (mask == target_mask_val) * filled_value
+
     scores_masked_k = keras_masked_fill(scores_k, src_mask, 0, -1e9)
     assert np.array_equal(pf(scores_masked_p.numpy()), pf(K.eval(scores_masked_k)))
 
@@ -403,7 +404,7 @@ def test_multi_head_attention():
     dummy_k = np.random.rand(batch_size, max_words_in_sentence, d_model).astype('float32')
     dummy_v = np.random.rand(batch_size, max_words_in_sentence, d_model).astype('float32')
     dummy_mask = np.ones((batch_size, 1, max_words_in_sentence)).astype('int64')
-    dummy_biases = [np.zeros(d_model,).astype('float32') for _ in range(4)]
+    dummy_biases = [np.zeros(d_model, ).astype('float32') for _ in range(4)]
     dummy_weights = [np.random.rand(d_model, d_model).astype('float32') for _ in range(4)]
 
     # pytorch
@@ -501,6 +502,20 @@ def test_multi_head_attention():
     assert np.array_equal(pf(o_mha_p.detach().numpy()), pf(K.eval(o_mha_k)))
 
 
+def test_position_wise_feed_forward():
+    dummy_emb_np = np.random.rand(batch_size, max_words_in_sentence, d_model).astype('float32')
+
+    # pytorch
+    input_p = torch.from_numpy(dummy_emb_np)
+    pff_p = PositionwiseFeedForwardP(d_model, hidden_size_pff)
+    pff_p(input_p)
+
+    # keras
+    input_k = K.constant(dummy_emb_np)
+    pff_k = PositionwiseFeedForwardK(d_model, hidden_size_pff)
+    pff_k(input_k)
+
+
 def test_sublayer_connection():
     dummy_mha_out = np.random.rand(batch_size, max_words_in_sentence, d_model).astype('float32')
 
@@ -508,26 +523,220 @@ def test_sublayer_connection():
     input_p = torch.from_numpy(dummy_mha_out)
     slc_p = SublayerConnectionP(size=d_model, dropout=0.)
     mha_p = MultiHeadedAttentionP(h=num_head, d_model=d_model, dropout=0.)
-    output_slc_p = slc_p(x=input_p, sublayer=mha_p)
+    output_slc_p = slc_p(x=input_p, sublayer=lambda x: mha_p(x, x, x))
 
     # keras
     input_k = K.constant(dummy_mha_out)
-    slc_k = SublayerConnectionK(size=d_model, dropout=0.)
     mha_k = MultiHeadedAttentionK(h=num_head, d_model=d_model, dropout=0.)
-    output_slc_k = slc_k([input_k, mha_k])
+    slc_k = SublayerConnectionK(size=d_model, sublayer=lambda x: mha_k(x, x, x), dropout=0.)
+    output_slc_k = slc_k(input_k)
+    # ToDo: Need to fix error that is '__call__() takes 2 positional arguments but 4 were given'
 
 
-def test_pytorch_etc():
-    num_batch = 3
-    dummy_out_decoder = np.random.rand(batch_size * num_batch, size_dict).astype('float32')
-    dummy_target_y = np.random.randint(low=1, high=max_words_in_sentence, size=(batch_size * num_batch))
+def test_make_model(src_vocab, trg_vocab, num_coder_blocks, d_model=512, d_ff=2048, h=8, dropout=0.1):
+    """
 
-    smoothing = 0.1  # 10% smoothing
+    Parameters
+    ----------
+    src_vocab: size of source vocab dict
+    trg_vocab: size of target vocab dict
+    num_coder_blocks: number of encoder/decoder block
+    d_model: embedding size
+    d_ff: number of hidden layer node
+    h: number of head
+    dropout: dropout rate
+
+    Returns
+    -------
+    model
+    """
+
+    class TestEncoderDecoderP(nn.Module):
+        def __init__(self):
+            super(TestEncoderDecoderP, self).__init__()
+
+        def forward(self, src, trg, src_mask, trg_mask):
+            # input to encoder (embedding and positional encoding)
+            src_emb_layer_p = EmbeddingsP(d_model=d_model, vocab=src_vocab)
+            src_pe_p = PositionalEncodingP(d_model=d_model, dropout=dropout)
+            input_encoder = src_pe_p(src_emb_layer_p(src))  # (5, 4, 12)
+
+            # encoder
+            for _ in range(num_coder_blocks):
+                # multi headed attention and 1st sublayer connection
+                mha_p = MultiHeadedAttentionP(h=h, d_model=d_model, dropout=dropout)
+                self_attn = lambda x: mha_p(x, x, x, src_mask)
+                slc1_p = SublayerConnectionP(size=d_model, dropout=dropout)
+                out_slc1_p = slc1_p(x=input_encoder, sublayer=self_attn)
+
+                # position wise feed forward and 2nd sublayer connection
+                pff_p = PositionwiseFeedForwardP(d_model, d_ff)
+                slc2_p = SublayerConnectionP(size=d_model, dropout=dropout)
+                input_encoder = slc2_p(x=out_slc1_p, sublayer=pff_p)
+            output_encoder = LayerNormP(features=d_model)(input_encoder)
+
+            # input to decoder (embedding and positional encoding)
+            trg_emb_layer_p = EmbeddingsP(d_model=d_model, vocab=trg_vocab)
+            trg_pe_p = PositionalEncodingP(d_model=d_model, dropout=dropout)
+            input_decoder = trg_pe_p(trg_emb_layer_p(trg))  # (5, 4, 12)
+
+            # decoder
+            for _ in range(num_coder_blocks):
+                # sublayer 1 of decoder
+                mha1_p = MultiHeadedAttentionP(h=h, d_model=d_model, dropout=dropout)
+                self_attn = lambda x: mha1_p(x, x, x, trg_mask)
+                slc1_p = SublayerConnectionP(size=d_model, dropout=dropout)
+                out_slc1_p = slc1_p(x=input_decoder, sublayer=self_attn)
+
+                # sublayer 2 of decoder
+                mha2_p = MultiHeadedAttentionP(h=h, d_model=d_model, dropout=dropout)
+                src_attn = lambda x: mha2_p(x, output_encoder, output_encoder, src_mask)
+                slc2_p = SublayerConnectionP(size=d_model, dropout=dropout)
+                out_slc2_p = slc2_p(x=out_slc1_p, sublayer=src_attn)
+
+                # position wise feed forward and 2nd sublayer connection
+                pff_p = PositionwiseFeedForwardP(d_model, d_ff)
+                slc3_p = SublayerConnectionP(size=d_model, dropout=dropout)
+                input_encoder = slc3_p(x=out_slc2_p, sublayer=pff_p)
+            output_decoder = LayerNormP(features=d_model)(input_encoder)
+
+            return output_decoder
+
+    model = TestEncoderDecoderP()
+
+    for p in model.parameters():
+        if p.dim() > 1:
+            nn.init.xavier_uniform_(p)
+
+    return model
+
+
+def test_get_model_output(batch=None):
+    """
+    Parameters
+    ----------
+    batch: element of batch instance. next(Batch(...))
+            this is used as input of encoder
+    Returns
+    -------
+    output of decoder
+    """
+    pad = 0
+
+    # pytorch ###########################
+    # test data
+    if batch:
+        ba_p = batch
+    else:
+        dummy_batch = np.random.randint(low=1, high=max_words_in_sentence, size=(batch_size, max_words_in_sentence))
+        dummy_batch[:, 0] = 1
+        dummy_batch = dummy_batch.astype('int64')
+
+        src = torch.from_numpy(dummy_batch)
+        trg = torch.from_numpy(dummy_batch)
+        ba_p = BatchP(src=src, trg=trg, pad=pad)
+
+    model = test_make_model(size_dict, size_dict, 2, d_model, hidden_size_pff, num_head, 0.)
+    out = model.forward(ba_p.src, ba_p.trg, ba_p.src_mask, ba_p.trg_mask)
+    # This is output of decoder
+
+
+def test_Label_smoothing():
+    """
+    this is used in SimpleLossCompute
+    """
+    dummy_out_decoder = np.random.rand(batch_size, max_words_in_sentence - 1, d_model).astype('float32')
+    dummy_target_y = np.random.randint(low=0, high=max_words_in_sentence, size=(batch_size, max_words_in_sentence - 1))
+
+    out = torch.from_numpy(dummy_out_decoder)
+    trg_y = torch.from_numpy(dummy_target_y)
+
+    generator = GeneratorP(d_model=d_model, vocab=size_dict)
+
+    x = generator(out)  # (5, 3, 7), which is (batch_size, max_words_in_sentence - 1, size_dict)
+    x = x.contiguous().view(-1, x.size(-1))  # (15, 7)
+    target = trg_y.contiguous().view(-1)  # (15)
+
+    norm = target.size(-1)  # 15
+    size = size_dict
     padding_idx = 0
-    x = torch.from_numpy(dummy_out_decoder)
-    target = torch.from_numpy(dummy_target_y)
+    smoothing = 0.2
 
-    true_dist = x.data.clone()
-    true_dist.fill_(smoothing / (size_dict - 2))  # filled with 0
-    true_dist.scatter_(1, target.data.unsqueeze(1), 1 - smoothing)
+    # from here, forward function of LabelSmoothingP
+    true_dist = x.data.clone()  # (15, 7)
+    true_dist.fill_(smoothing / (size - 2))
+    """
+        15개 token 위치에 대한 softmax 값을 담고 있는 (15, 7) 행렬을 
+        전부 (smoothing / size-2))로 체운 후
+    """
+
+    true_dist.scatter_(1, target.data.unsqueeze(1), 1.0 - smoothing)
+    """
+        15개 token에 대한 정답지인 target에 해당하는 index에 (1 - smoothing)을 체운다.
+        즉 오답의 하한(smoothing / (size-2))과 정답의 상한값(1-smoothing)을 체운 것이다.
+    """
+
     true_dist[:, padding_idx] = 0
+    """
+        padding_idx에 해당하는 컬럼은 그 값이 모두 0이고
+        이 컬럼에 대해서는 smoothing 하지 않을 것이다.
+        이를 위해 true_dist에도 이 컬럼(padding column)에는 0을 체운다.
+    """
+
+    mask = torch.nonzero(target.data == padding_idx)  # getting idx of nonzero
+    """
+    target token이 padding token에 해당하는 index를 찾는다.
+    """
+
+    if mask.dim() > 1:  # target token이 padding token에 해당하는 값이 있으면
+        true_dist.index_fill_(0, mask.squeeze(), 0.0)
+        """
+            target token이 0(padding_idx)인 경우
+            해당하는 row에 대해서는 smoothing 하지 않을 것이므로 true_dist를 모두 0으로 설정
+        """
+
+    loss = nn.KLDivLoss(reduction='sum')(x, Variable(true_dist, requires_grad=False))
+    loss = loss / norm
+    loss.backward()
+
+
+def test_greedy_decode():
+    class SimpleLossCompute:
+        "A simple loss compute and train function."
+
+        def __init__(self, generator, criterion, opt=None):
+            self.generator = generator
+            self.criterion = criterion
+            self.opt = opt
+
+        def __call__(self, x, y, norm):
+            x = self.generator(x)
+            norm = norm.type(torch.FloatTensor)  # added by kdw
+            loss = self.criterion(x.contiguous().view(-1, x.size(-1)),
+                                  y.contiguous().view(-1)) / norm
+            loss.backward()
+            if self.opt is not None:
+                self.opt.step()
+                self.opt.optimizer.zero_grad()
+            return loss.data[0] * norm
+
+    V = 11
+    criterion = LabelSmoothingP(size=V, padding_idx=0, smoothing=0.0)
+    model = make_model_p(V, V, N=2)
+    model_opt = NoamOptP(model.src_embed[0].d_model, 1, 400,
+                         torch.optim.Adam(model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9))
+
+    for epoch in range(10):
+        model.train()
+        run_epoch_p(data_gen_p(V, 30, 20, 10), model,
+                    SimpleLossCompute(model.generator, criterion, model_opt))
+        model.eval()
+        print(run_epoch_p(data_gen_p(V, 30, 5, 10), model,
+                          SimpleLossCompute(model.generator, criterion, None)))
+
+    model.eval()
+    src = Variable(torch.LongTensor([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]))
+    src_mask = Variable(torch.ones(1, 1, 10))
+    print(greedy_decode_p(model, src, src_mask, max_len=10, start_symbol=1))
+
+test_greedy_decode()

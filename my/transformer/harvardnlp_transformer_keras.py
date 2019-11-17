@@ -351,7 +351,7 @@ class MultiHeadedAttentionK(Layer):
 
 
 class SublayerConnectionK(Layer):
-    def __init__(self, size, dropout):
+    def __init__(self, size, sublayer, dropout):
         """
 
         Parameters
@@ -362,10 +362,21 @@ class SublayerConnectionK(Layer):
         super(SublayerConnectionK, self).__init__()
         self.norm = LayerNormK(features=size)
         self.dropout = Dropout(rate=dropout)
+        self.sublayer = sublayer
 
-    def call(self, x_sublayer):
-        x, sublayer = x_sublayer
-        return x + self.dropout(sublayer(self.norm(x)))
+    def call(self, x):
+        return x + self.dropout(self.sublayer(self.norm(x)))
+
+
+class PositionwiseFeedForwardK(Layer):
+    def __init__(self, d_model, d_ff, dropout=0.1):
+        super(PositionwiseFeedForwardK, self).__init__()
+        self.w_1 = Dense(input_shape=(d_model,), units=d_ff)
+        self.w_2 = Dense(input_shape=(d_ff,), units=d_model)
+        self.dropout = Dropout(rate=dropout)
+
+    def call(self, x):
+        return self.w_2(self.dropout(K.relu(self.w_1(x))))
 
 
 if __name__ == '__test__':

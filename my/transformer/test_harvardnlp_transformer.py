@@ -73,9 +73,15 @@ def first_example():
         """A simple loss compute and train function."""
 
         def __init__(self, generator, criterion, opt=None):
-            self.generator = generator  # output of transformer unit -> linear and log_softmax
+            self.generator = generator
+            """
+            converter from output of transformer unit to linear and log_softmax
+            shape converted 
+                from (batch_size, max_words_in_sentence - 1, d_model) 
+                to   (batch_size, max_words_in_sentence - 1, size_dict) 
+            """
             self.criterion = criterion  # LabelSmoothing
-            self.opt = opt
+            self.opt = opt  # NoamOpt
 
         def __call__(self, x, y, norm):
             """
@@ -90,7 +96,7 @@ def first_example():
             -------
 
             """
-            x = self.generator(x)  # output of log_softmax with shape of (num_batch * batch_size, dict_size)
+            x = self.generator(x)  # output of log_softmax with shape of (num_batch * batch_size, V)
             norm = norm.type(torch.FloatTensor)  # added by kdw
             loss = self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1)) / norm
             loss.backward()
@@ -101,7 +107,7 @@ def first_example():
             return loss.data.item() * norm
 
     # Train the simple copy task.
-    V = 7  # size of word dictionary
+    V = size_dict  # size of word dictionary
     criterion = LabelSmoothingP(size=V, padding_idx=0, smoothing=0.0)
     model = make_model_p(src_vocab=V, tgt_vocab=V, N=2)
 
@@ -122,6 +128,7 @@ def first_example():
         model.eval()
         print(run_epoch_p(data_gen(V=V, batch=batch_size, nbatches=3, max_words_in_sentence=max_words_in_sentence), model,
                           SimpleLossCompute(model.generator, criterion, None)))
+    return model
 
 
 # encoder layer v1 ##############################

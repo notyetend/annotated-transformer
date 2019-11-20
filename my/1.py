@@ -1,5 +1,5 @@
 from havardnlp_transformer import *
-
+from tensorflow.keras.layers import Conv1D
 
 
 def data_gen(V, batch, nbatches, max_words_in_sentence):

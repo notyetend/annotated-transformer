@@ -739,5 +739,3 @@ def test_greedy_decode():
     src_mask = Variable(torch.ones(1, 1, 10))
     print(greedy_decode_p(model, src, src_mask, max_len=10, start_symbol=1))
 
-
-test_greedy_decode()

@@ -49,16 +49,16 @@ class Args:
 
 
 args = Args()
-args.corpus_path = 'bert_pytorch/dataset/sample_corpus.txt'
-args.output_path = 'bert_pytorch/dataset/sample_vocab.pkl'
+args.corpus_path = train_bt_file  # 'bert_pytorch/dataset/sample_corpus.txt'
+args.output_path = train_bt_file.replace('.csv', '_vocab.pkl')
 args.encoding = 'utf-8'
 args.vocab_size = 10
 args.min_freq = 1
-args.train_dataset = None
+args.train_dataset = train_bt_file
 args.seq_len = None
 args.corpus_lines = None
-args.on_memory = None
-args.test_dataset = None
+args.on_memory = True
+args.test_dataset = test_bt_file
 args.batch_size = None
 args.num_workers = None
 
@@ -77,30 +77,10 @@ with open(test_bt_file, 'r', encoding=args.encoding) as f:
     vocab = WordVocab(f, max_size=args.vocab_size, min_freq=args.min_freq)
 
 
-
 """
 Bert dataset
 >>> BERTDataset(args.train_dataset, vocab, seq_len=args.seq_len, corpus_lines=args.corpus_lines, on_memory=args.on_memory)
 """
 bert_data = BERTDataset(corpus_path=test_bt_file, vocab=vocab, seq_len=64, corpus_lines=1000, on_memory=True)
 bert_data[0]
-
-corpus_lines = 0
-with open(test_bt_file, "r", encoding='utf-8') as f:
-    lines = [line[:-1].split("\t")
-             for line in tqdm.tqdm(f, desc="Loading Dataset", total=38000)]
-    corpus_lines = len(lines)
-
-    for line in tqdm.tqdm(f, desc="Loading Dataset", total=560000):
-        corpus_lines += 1
-        print(line)
-        print(type(line))
-        print(line[:-1])
-        if corpus_lines > 10:
-            break
-
-ts = "Wow	What a shame"
-ts[:-1].split('\t')[:1]
-ts.split('\t')
-
 

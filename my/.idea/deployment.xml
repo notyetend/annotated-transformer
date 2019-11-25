@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData">
+  <component name="PublishConfigData" autoUpload="Always" serverName="dongwan.kim@10.10.46.200:22">
     <serverData>
       <paths name="alfred@10.10.46.200:22">
         <serverdata>
@@ -23,6 +23,42 @@
           </mappings>
         </serverdata>
       </paths>
+      <paths name="dongwan.kim@10.10.46.200:22 (3)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="dongwan.kim@10.10.46.200:22 (4)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="dongwan.kim@10.10.46.200:22 (5)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="dongwan.kim@10.10.46.200:22 (6)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/dongwan.kim/projects/my_trf" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="dongwan.kim@10.10.46.200:22 (7)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/dongwan.kim/projects/my_trf" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
     </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
   </component>
 </project>

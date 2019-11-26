@@ -10,6 +10,7 @@ import params_flow as pf
 
 from tensorflow import keras
 from tensorflow.keras import backend as K
+# from tensorflow.python.keras import backend as K  # fixed by kdw
 
 import bert
 

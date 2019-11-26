@@ -22,6 +22,7 @@ class BertModelLayer(Layer):
          https://arxiv.org/pdf/1909.11942.pdf - ALBERT
 
     """
+
     class Params(BertEmbeddingsLayer.Params,
                  TransformerEncoderLayer.Params):
         pass
@@ -29,9 +30,9 @@ class BertModelLayer(Layer):
     # noinspection PyUnusedLocal
     def _construct(self, params: Params):
         self.embeddings_layer = None
-        self.encoders_layer   = None
+        self.encoders_layer = None
 
-        self.support_masking  = True
+        self.support_masking = True
 
     # noinspection PyAttributeOutsideInit
     def build(self, input_shape):
@@ -64,6 +65,7 @@ class BertModelLayer(Layer):
         if self.params.adapter_size is not None:
             def freeze_selector(layer):
                 return layer.name not in ["adapter-up", "adapter-down", "LayerNorm", "extra_word_embeddings"]
+
             pf.utils.freeze_leaf_layers(self, freeze_selector)
 
     def call(self, inputs, mask=None, training=None):
@@ -71,6 +73,5 @@ class BertModelLayer(Layer):
             mask = self.embeddings_layer.compute_mask(inputs)
 
         embedding_output = self.embeddings_layer(inputs, mask=mask, training=training)
-        output           = self.encoders_layer(embedding_output, mask=mask, training=training)
-        return output   # [B, seq_len, hidden_size]
-
+        output = self.encoders_layer(embedding_output, mask=mask, training=training)
+        return output  # [B, seq_len, hidden_size]

@@ -119,6 +119,7 @@ class BERTTrainer:
             # next sentence prediction accuracy
             correct = next_sent_output.argmax(dim=-1).eq(data["is_next"]).sum().item()
             avg_loss += loss.item()
+            # avg_loss += loss.detach().item()  # fixed by kdw
             total_correct += correct
             total_element += data["is_next"].nelement()
 
@@ -128,6 +129,7 @@ class BERTTrainer:
                 "avg_loss": avg_loss / (i + 1),
                 "avg_acc": total_correct / total_element * 100,
                 "loss": loss.item()
+                # "loss": loss.detach().item()
             }
 
             if i % self.log_freq == 0:

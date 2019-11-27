@@ -16,13 +16,15 @@ import math
 import matplotlib.pyplot as plt
 from functools import partial
 
-from tensorflow.python.keras.models import Model
-from tensorflow.python.keras.layers import (
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import (
     Dense, Flatten, Conv1D, Dropout, Embedding, Input, Lambda, Layer, Softmax
 )
-from tensorflow.python.keras.optimizers import Adam
-from tensorflow.python.keras import backend as K
-
+from tensorflow.keras import Sequential
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras import backend as K
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import InputSpec
 from transformer.test_config import *
 
 
@@ -245,6 +247,7 @@ class EncoderLayerK(Layer):
     """
 
     """
+
     def __init__(self):
         super(EncoderLayerK, self).__init__()
         # ToDo: implement
@@ -287,6 +290,7 @@ def attention_k(q_w_q, k_w_k, v_w_v, mask=None, dropout=None):
     -------
 
     """
+
     def masked_fill(x, mask, target_mask_val, filled_value=-1e9):
         return x * (x != target_mask_val) + (mask == target_mask_val) * filled_value
 
@@ -304,6 +308,7 @@ class MultiHeadedAttentionK(Layer):
     """
 
     """
+
     def __init__(self, h, d_model, dropout=0.1, linears=None):
         """
 
@@ -379,29 +384,145 @@ class PositionwiseFeedForwardK(Layer):
         return self.w_2(self.dropout(K.relu(self.w_1(x))))
 
 
-if __name__ == '__test__':
-    max_words_in_sentence = 4  # of words in each sentence
-    batch_size = 5  # of sentences
-    size_dict = 7  # size of word dictionary
-    d_model = 12
-    hidden_size_pff = 11
-    num_head = 2
-    dropout_rate = 0.1
-    num_encoder_layer = 2
-    learning_rate = 0.001
+class Transformer(Layer):
+    """
+    >>> model = Transformer(
+        d_model=512,
+        src_vocab=100,
+        trg_vocab=100,
+        dropout_rate=0.1,
+        num_coder_blocks=2,
+        num_heads=4,
+        d_ff=1024
+    )
 
-    # x = Input(shape=(max_words_in_sentence,))
-    src = K.constant([[0, 3, 0, 2],
-                      [1, 0, 3, 2],
-                      [0, 0, 0, 1],
-                      [1, 0, 0, 1],
-                      [3, 2, 2, 1]])
-    print(src, src.shape)
-    src_mask = K.constant([[[1, 1, 1, 1]],
-                           [[1, 1, 1, 1]],
-                           [[1, 1, 1, 1]],
-                           [[1, 1, 1, 1]],
-                           [[1, 1, 1, 1]]]);
-    print(src_mask, src_mask.shape)
-    x = EmbeddingsK(d_model=d_model, vocab=size_dict)(src)  # embedding on 12 dim for 7 tokens total.
-    x = PositionalEncodingK(d_model=d_model, dropout_rate=0.)(x)
+    >>> model.build(input_shape=(None, 12))
+    >>> model.compile(
+        optimizer=Adam(
+    )
+
+    """
+
+    def __init__(self, d_model, src_vocab, trg_vocab, dropout_rate, num_coder_blocks, num_heads, d_ff):
+        super().__init__()
+        self.d_model = d_model
+        self.src_vocab = src_vocab
+        self.trg_vocab = trg_vocab
+        self.dropout_rate = dropout_rate
+        self.num_coder_blocks = num_coder_blocks
+        self.num_heads = num_heads
+        self.d_ff = d_ff
+
+    # noinspection PyAttributeOutsideInit
+    def build(self, input_shape):
+        print(input_shape)
+        # assert isinstance(input_shape, list) and len(input_shape) ==
+        assert len(input_shape) == 4
+        src_shape, trg_shape, src_mask_shape, trg_mask_shape = input_shape
+        self.input_spec = [
+            InputSpec(shape=src_shape),
+            InputSpec(shape=trg_shape),
+            InputSpec(shape=src_mask_shape),
+            InputSpec(shape=trg_mask_shape)
+        ]
+
+        self.src_emb_layer = EmbeddingsK(d_model=self.d_model, vocab=self.src_vocab)
+        self.src_pe = PositionalEncodingK(d_model=self.d_model, dropout=self.dropout_rate)
+
+        self.encoder_mha_list = [
+            MultiHeadedAttentionK(h=self.num_head, d_model=self.d_model, dropout=self.dropout_rate)
+            for _ in self.num_coder_blocks
+        ]
+
+        self.encoder_slc_list = [
+            SublayerConnectionK(size=self.d_model, dropout=self.dropout_rate)
+            for _ in self.num_coder_blocks * 2
+        ]
+
+        self.encoder_pff_list = [
+            PositionwiseFeedForwardK(d_model=self.d_model, d_ff=self.d_ff)
+            for _ in self.num_coder_blocks
+        ]
+
+        self.encoder_layer_norm = LayerNormK(features=d_model)
+
+        self.trg_emb_layer = EmbeddingsK(d_model=self.d_model, vocab=self.trg_vocab)
+        self.trg_pe = PositionalEncodingK(d_model=self.d_model, dropout=self.dropout_rate)
+
+        self.decoder_mha_list = [
+            MultiHeadedAttentionK(h=self.num_head, d_model=self.d_model, dropout=self.dropout_rate)
+            for _ in self.num_coder_blocks * 2
+        ]
+
+        self.decoder_slc_list = [
+            SublayerConnectionK(size=self.d_model, dropout=self.dropout_rate)
+            for _ in self.num_coder_blocks * 3
+        ]
+
+        self.decoder_pff_list = [
+            PositionwiseFeedForwardK(d_model=self.d_model, d_ff=self.d_ff)
+            for _ in self.num_coder_blocks
+        ]
+
+        self.decoder_layer_norm = LayerNormK(features=d_model)
+
+    def call(self, src_trg_smask_tmask):
+        src, trg, src_mask, trg_mask = src_trg_smask_tmask
+        input_encoder = self.src_pe(self.src_emb_layer(src))
+
+        # encoder
+        for i in range(self.num_coder_blocks):
+            # multi headed attention and 1st sublayer connection
+            self_attn = lambda x: self.encoder_mha_list[i](x, x, x, src_mask)
+            out_slc1 = self.encoder_slc_list[i](x=input_encoder, sublayer=self_attn)
+
+            # position wise feed forward and 2nd sublayer connection
+            input_encoder = self.encoder_slc_list[i * 2](x=out_slc1, sublayer=self.encoder_pff_list[i])
+        output_encoder = self.encoder_layer_norm(input_encoder)
+
+        # input to decoder (embedding and positional encoding)
+        input_decoder = self.trg_pe(self.trg_emb_layer(trg))
+
+        # decoder
+        for j in range(self.num_coder_blocks):
+            # sublayer 1 of decoder
+            self_attn1 = lambda x: self.decoder_mha_list[j](x, x, x, trg_mask)
+            out_slc1 = self.decoder_slc_list[j](x=input_decoder, sublayer=self_attn1)
+
+            # sublayer 2 of decoder
+            src_attn2 = lambda x: self.decoder_mha_list[j * 2](x, output_encoder, output_encoder, src_mask)
+            out_slc2 = self.decoder_slc_list[j * 2](x=out_slc1, sublayer=src_attn2)
+
+            # position-wise feed-forward and 2nd sublayer connection
+            input_encoder = self.decoder_slc_list[j * 3](x=out_slc2, sublayer=self.decoder_pff_list[j])
+        output_decoder = self.decoder_layer_norm(input_encoder)
+
+        return output_decoder
+
+# if __name__ == '__test__':
+#     max_words_in_sentence = 4  # of words in each sentence
+#     batch_size = 5  # of sentences
+#     size_dict = 7  # size of word dictionary
+#     d_model = 12
+#     hidden_size_pff = 11
+#     num_head = 2
+#     dropout_rate = 0.1
+#     num_encoder_layer = 2
+#     learning_rate = 0.001
+#
+#     x = Input(shape=(max_words_in_sentence,))
+# src = K.constant([[0, 3, 0, 2],
+#                   [1, 0, 3, 2],
+#                   [0, 0, 0, 1],
+#                   [1, 0, 0, 1],
+#                   [3, 2, 2, 1]])
+# print(src, src.shape)
+# src_mask = K.constant([[[1, 1, 1, 1]],
+#                        [[1, 1, 1, 1]],
+#                        [[1, 1, 1, 1]],
+#                        [[1, 1, 1, 1]],
+#                        [[1, 1, 1, 1]]]);
+# print(src_mask, src_mask.shape)
+# x = EmbeddingsK(d_model=d_model, vocab=size_dict)(src)  # embedding on 12 dim for 7 tokens total.
+# x = PositionalEncodingK(d_model=d_model, dropout_rate=0.)(x)
+#

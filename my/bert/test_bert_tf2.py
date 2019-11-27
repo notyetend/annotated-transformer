@@ -7,25 +7,30 @@ Created at 2019-11-26
 References
  - https://github.com/kpe/bert-for-tf2
 """
-from bert import BertModelLayer
+import numpy as np
+import random
 
 
-l_bert = BertModelLayer(**BertModelLayer.Params(
-    vocab_size=16000,  # embedding params
-    use_token_type=True,
-    use_position_embeddings=True,
-    token_type_vocab_size=2,
+def parity_ds_generator(batch_size=32, max_len=10, max_int=4, modulus=2):
+    """
+    Generates a parity calculation dataset (seq -> sum(seq) mod 2),
+    where seq is a sequence of length less than max_len
+    of integers in [1..max_int).
+    """
+    while True:
+        data = np.zeros((batch_size, max_len))
+        tag = np.zeros(batch_size, dtype='int32')
+        for i in range(batch_size):
+            datum_len = random.randint(1, max_len - 1)
+            total = 0
+            for j in range(datum_len):
+                data[i, j] = random.randint(1, max_int)
+                total += data[i, j]
+            tag[i] = total % modulus
+        yield data, tag  # ([batch_size, max_len], [max_len])
 
-    num_layers=12,  # transformer encoder params
-    hidden_size=768,
-    hidden_dropout=0.1,
-    intermediate_size=4 * 768,
-    intermediate_activation="gelu",
 
-    adapter_size=None,  # see arXiv:1902.00751 (adapter-BERT)
+g = parity_ds_generator()
+next(g)
 
-    shared_layer=False,  # True for ALBERT (arXiv:1909.11942)
-    embedding_size=None,  # None for BERT, wordpiece embedding size for ALBERT
-
-    name="bert"  # any other Keras layer params
-))
+13 % 5

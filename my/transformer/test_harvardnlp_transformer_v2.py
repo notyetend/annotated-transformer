@@ -535,22 +535,10 @@ def test_sublayer_connection():
 
 def test_make_model(src_vocab, trg_vocab, num_coder_blocks, d_model=512, d_ff=2048, h=8, dropout=0.1):
     """
+    pytorch only
 
-    Parameters
-    ----------
-    src_vocab: size of source vocab dict
-    trg_vocab: size of target vocab dict
-    num_coder_blocks: number of encoder/decoder block
-    d_model: embedding size
-    d_ff: number of hidden layer node
-    h: number of head
-    dropout: dropout rate
-
-    Returns
-    -------
-    model
+    step by stem implementation of encoderDecoder
     """
-
     class TestEncoderDecoderP(nn.Module):
         def __init__(self):
             super(TestEncoderDecoderP, self).__init__()
@@ -613,6 +601,8 @@ def test_make_model(src_vocab, trg_vocab, num_coder_blocks, d_model=512, d_ff=20
 
 def test_get_model_output(batch=None):
     """
+    pytorch only
+
     Parameters
     ----------
     batch: element of batch instance. next(Batch(...))
@@ -701,6 +691,9 @@ def test_Label_smoothing():
 
 
 def test_greedy_decode():
+    """
+    pytorch only
+    """
     class SimpleLossCompute:
         "A simple loss compute and train function."
 
@@ -739,3 +732,25 @@ def test_greedy_decode():
     src_mask = Variable(torch.ones(1, 1, 10))
     print(greedy_decode_p(model, src, src_mask, max_len=10, start_symbol=1))
 
+
+def test_k_transformer():
+    trf_block = Transformer(
+        d_model=512,
+        src_vocab=100,
+        trg_vocab=100,
+        dropout_rate=0.1,
+        num_coder_blocks=2,
+        num_heads=4,
+        d_ff=1024
+    )
+    ge = GeneratorK(d_model=512, vocab=100)
+
+    model = Sequential([
+        trf_block,
+        ge
+    ])
+
+    model.build(input_shape=[[None, 12], [None, 12], [None, 12], [None, 12]])
+    model.compile(
+        optimizer=Adam(lr=0.002)
+    )

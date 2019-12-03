@@ -17,7 +17,7 @@ Steps
 """
 import tqdm
 import pandas as pd
-from torch.utils.data.dataloader import  DataLoader
+from torch.utils.data.dataloader import DataLoader
 import argparse
 from bert_pytorch.dataset.vocab import WordVocab
 from bert_pytorch.dataset import BERTDataset
@@ -27,9 +27,9 @@ from bert_pytorch.trainer import BERTTrainer
 """
 Data pre-processing
 """
-test_data_file = '../dataset/yelp_review_polarity_csv/test.csv'  # 38000
-train_data_file = '../dataset/yelp_review_polarity_csv/train.csv'  # 560000
-train_test_data_file = '../dataset/yelp_review_polarity_csv/train_test.csv'
+data_base_path = 'dataset/yelp_review_polarity_csv/'
+test_data_file = data_base_path + 'test.csv'  # 38000
+train_data_file = data_base_path + 'train.csv'  # 560000
 test_bt_file = test_data_file.replace('.csv', '_bt.csv')
 train_bt_file = train_data_file.replace('.csv', '_bt.csv')
 
@@ -65,16 +65,16 @@ class Args:
 
 args = Args()
 # Data source
-args.train_dataset = train_bt_file
-args.test_dataset = test_bt_file
+args.train_dataset = data_base_path + train_bt_file
+args.test_dataset = data_base_path + test_bt_file
 args.corpus_path = train_bt_file  # 'bert_pytorch/dataset/sample_corpus.txt'
-args.vocab_path = 'dataset/yelp_review_polarity_csv/vocab.pkl'
-args.output_path = '../dataset/yelp_review_polarity_csv/bert_trained.model'
+args.vocab_path = data_base_path + 'vocab.pkl'
+args.output_path = data_base_path + 'bert_trained.model'
 args.encoding = 'utf-8'
 
 # Model settings
 args.hidden = 512
-args.layers = 2
+args.layers = 2  # number of transformer blocks
 args.attn_heads = 4
 args.seq_len = 64
 
@@ -83,7 +83,7 @@ args.batch_size = 256
 args.epochs = 30
 args.num_workers = 0
 args.vocab_size = 30000
-args.min_freq = 1
+args.min_freq = 1  # ???
 args.corpus_lines = bt_train.shape[0]
 args.on_memory = True
 
@@ -96,7 +96,6 @@ args.adam_weight_decay = 0.01
 args.with_cuda = True
 args.log_freq = 10  # printing loss every n iter: setting n
 args.cuda_devices = 0
-
 
 """
 Building vocab
@@ -115,7 +114,8 @@ Bert dataset
 about Dataset class
  - https://pytorch.org/tutorials/beginner/data_loading_tutorial.html
 """
-train_dataset = BERTDataset(corpus_path=train_bt_file, vocab=vocab, seq_len=args.seq_len, corpus_lines=args.corpus_lines, on_memory=True)
+train_dataset = BERTDataset(corpus_path=train_bt_file, vocab=vocab, seq_len=args.seq_len,
+                            corpus_lines=args.corpus_lines, on_memory=True)
 test_dataset = BERTDataset(corpus_path=test_bt_file, vocab=vocab, seq_len=args.seq_len, on_memory=args.on_memory)
 
 """
@@ -124,19 +124,18 @@ DataLoader
 train_data_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.num_workers)
 test_data_loader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=args.num_workers)
 
-
 """
 Build model
 """
 bert = BERT(len(vocab), hidden=args.hidden, n_layers=args.layers, attn_heads=args.attn_heads)
 
-
 """
 Trainer
 """
-trainer = BERTTrainer(bert, len(vocab), train_dataloader=train_data_loader, test_dataloader=test_data_loader,
-                      lr=args.lr, betas=(args.adam_beta1, args.adam_beta2), weight_decay=args.adam_weight_decay,
-                      with_cuda=args.with_cuda, cuda_devices=args.cuda_devices, log_freq=args.log_freq)
+trainer = BERTTrainer(
+    bert=bert, vocab_size=len(vocab), train_dataloader=train_data_loader, test_dataloader=test_data_loader,
+    lr=args.lr, betas=(args.adam_beta1, args.adam_beta2), weight_decay=args.adam_weight_decay,
+    with_cuda=args.with_cuda, cuda_devices=args.cuda_devices, log_freq=args.log_freq)
 
 """
 Train

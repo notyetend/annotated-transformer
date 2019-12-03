@@ -750,7 +750,11 @@ def test_k_transformer():
         ge
     ])
 
-    model.build(input_shape=[[None, 12], [None, 12], [None, 12], [None, 12]])
+    # model.build(input_shape=[[None, 12], [None, 12], [None, 12], [None, 12]])
+    model.build(input_shape=[12, 12, 12, 12])
     model.compile(
         optimizer=Adam(lr=0.002)
     )
+
+
+test_k_transformer()

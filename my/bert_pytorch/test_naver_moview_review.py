@@ -58,52 +58,72 @@ args.log_freq = 10  # printing loss every n iter: setting n
 args.cuda_devices = 0
 
 
-"""
-Building vocab
->>> vocab = WordVocab.load_vocab(args.vocab_path)
-"""
-def korean_to_be_englished(korean_word):
+# 초성 리스트. 00 ~ 18
+cho = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']
+# 중성 리스트. 00 ~ 20
+jung = ['ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ']
+# 종성 리스트. 00 ~ 27 + 1(1개 없음)
+jong = ['', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ',
+        'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']
+
+
+# pre-process
+def split_ko_by_jamo(sentence, sep=' '):
     """
     References
         https://frhyme.github.io/python/python_korean_englished/
 
     한글 단어를 입력받아서 초성/중성/종성을 구분하여 리턴해줍니다.
 
-    >>> korean_to_be_englished('아녕')
+    >>> split_ko_by_jamo(' 안녕 ㅎㅇ')
     """
-    ####################################
-    # 초성 리스트. 00 ~ 18
-    cho = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']
-    # 중성 리스트. 00 ~ 20
-    jung = ['ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ']
-    # 종성 리스트. 00 ~ 27 + 1(1개 없음)
-    jong = [' ', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']
-    ####################################
-
-    korean_word = re.sub('[ ]', '', korean_word)
+    global cho, jung, jong
+    sentence = re.sub('[ ]', '', sentence)
     r_lst = ''
 
-    for w in list(korean_word.strip()):
-        if '가'<=w<='힣':
-            ch1 = (ord(w) - ord('가'))//588
-            ch2 = ((ord(w) - ord('가')) - (588*ch1)) // 28
-            ch3 = (ord(w) - ord('가')) - (588*ch1) - 28*ch2
-            print(ch1, ch2, ch3, type(ch3))
-            r_lst += ' '.join([cho[ch1], jung[ch2], jong[ch3]]) + ' '
+    for w in sentence:
+        if '가' <= w <= '힣':
+            ch1 = (ord(w) - ord('가')) // 588
+            ch2 = ((ord(w) - ord('가')) - (588 * ch1)) // 28
+            ch3 = (ord(w) - ord('가')) - (588 * ch1) - 28 * ch2
+            r_lst += sep.join([cho[ch1], jung[ch2], jong[ch3]]) + sep
+        elif w == sep:
+            r_lst += w
         else:
-            r_lst += w + ' '
+            r_lst += w + sep
 
-        r_lst += '[EOC] '
+        r_lst += '[EOC]' + sep
 
     return r_lst
 
+
+def split_ko_by_char(sentence, sep=' '):
+    """
+    split_ko_by_char('안녕 하hello')
+    """
+    r_lst = ''
+    for w in sentence:
+        if '가' <= w <= '힣':
+            r_lst += (w + sep)
+        else:
+            r_lst += w
+
+    return r_lst
+
+
 df_raw = pd.read_csv(args.corpus_path, sep='\t', encoding='utf-8')
-df_raw['document'] = df_raw['document'].astype(str).map(korean_to_be_englished)
-df_raw['document'][0]
-# df_raw.document.values
-# with open(args.corpus_path, 'r', encoding=args.encoding) as f:
-#     vocab = WordVocab(f, max_size=args.vocab_size, min_freq=args.min_freq)
-vocab = WordVocab(df_raw.document.values, max_size=args.vocab_size, min_freq=args.min_freq)
+df_raw['document_cleaned'] = df_raw['document'].astype(str).map(split_ko_by_jamo)
+df_raw['document_cleaned'][0]
+
+
+"""
+Building vocab
+>>> vocab = WordVocab.load_vocab(args.vocab_path)
+"""
+vocab = WordVocab(df_raw['document_cleaned'].values, max_size=args.vocab_size, min_freq=args.min_freq)
 vocab.save_vocab(args.output_path)
 
-'abc'.
+print('Vocab size:', len(vocab))
+vocab.save_vocab(args.output_path)
+vocab.freqs
+

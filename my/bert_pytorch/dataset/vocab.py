@@ -91,11 +91,11 @@ class TorchVocab(object):
 
 class Vocab(TorchVocab):
     def __init__(self, counter, max_size=None, min_freq=1):
-        self.pad_index = 0
-        self.unk_index = 1
-        self.eos_index = 2
-        self.sos_index = 3
-        self.mask_index = 4
+        self.pad_index = 0  # padding
+        self.unk_index = 1  # unknown token
+        self.eos_index = 2  # end of sentence
+        self.sos_index = 3  # start of sentence
+        self.mask_index = 4  # masking
         super().__init__(counter, specials=["<pad>", "<unk>", "<eos>", "<sos>", "<mask>"],
                          max_size=max_size, min_freq=min_freq)
 

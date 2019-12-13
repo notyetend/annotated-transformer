@@ -8,7 +8,8 @@ Sample data
     https://course.fast.ai/datasets
     References
         https://medium.com/swlh/a-simple-guide-on-using-bert-for-text-classification-bbf041ac8d04
-
+ - Naver movie review
+    https://github.com/e9t/nsmc/
 Steps
  0. follow all steps of __main__.py
      1. dataset > vocab.py > build()

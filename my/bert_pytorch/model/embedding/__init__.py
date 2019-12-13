@@ -1,1 +1,2 @@
-from .bert import BERTEmbedding
+from .bert import BERTEmbedding, CustomBERTEmbedding
+

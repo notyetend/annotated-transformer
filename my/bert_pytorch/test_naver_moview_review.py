@@ -1,14 +1,15 @@
-import pandas as pd
-
-import tqdm
-import pandas as pd
-from torch.utils.data.dataloader import DataLoader
-import argparse
-from bert_pytorch.dataset.vocab import WordVocab
-from bert_pytorch.dataset import BERTDataset
-from bert_pytorch.model import BERT
-from bert_pytorch.trainer import BERTTrainer
 import re
+
+from datetime import datetime
+import pandas as pd
+import torch
+from torch.utils.data.dataloader import DataLoader
+from sklearn.model_selection import train_test_split
+
+from bert_pytorch.dataset.vocab import WordVocab
+from bert_pytorch.dataset import BERTDataset, CustomBERTDataset
+from bert_pytorch.model import BERT, CustomBERT, CustomBERTLM, GoodBad
+from bert_pytorch.trainer import BERTTrainer, CustomBERTTrainer
 
 
 class Args:
@@ -21,13 +22,14 @@ args = Args()
 
 
 data_base_path = 'dataset/naver_movie_review/'
-raw_data_file = 'naver_movie_review.txt'
-train_bt_file = ''
-test_bt_file = ''
+raw_data_file = 'ratings.txt'
+train_bt_file = 'corpus_train.txt'
+test_bt_file = 'corpus_test.txt'
 
+args.raw_dataset = data_base_path + raw_data_file
 args.train_dataset = data_base_path + train_bt_file
 args.test_dataset = data_base_path + test_bt_file
-args.corpus_path = data_base_path + raw_data_file  # 'bert_pytorch/dataset/sample_corpus.txt'
+args.corpus_path = data_base_path + 'corpus.txt'
 args.vocab_path = data_base_path + 'vocab.pkl'
 args.output_path = data_base_path + 'bert_trained.model'
 args.encoding = 'utf-8'
@@ -40,12 +42,13 @@ args.seq_len = 64
 
 # Data feed options
 args.batch_size = 256
-args.epochs = 30
+args.epochs = 3
 args.num_workers = 0
 args.vocab_size = 30000
 args.min_freq = 1  # ???
 args.corpus_lines = 200000
 args.on_memory = True
+args.test_dataset_ratio = 0.1
 
 # Training settings
 args.lr = 1e-3
@@ -55,7 +58,7 @@ args.adam_weight_decay = 0.01
 
 args.with_cuda = True
 args.log_freq = 10  # printing loss every n iter: setting n
-args.cuda_devices = 0
+args.cuda_devices = [2]
 
 
 # 초성 리스트. 00 ~ 18
@@ -111,19 +114,77 @@ def split_ko_by_char(sentence, sep=' '):
     return r_lst
 
 
-df_raw = pd.read_csv(args.corpus_path, sep='\t', encoding='utf-8')
+df_raw = pd.read_csv(args.raw_dataset, sep='\t', encoding='utf-8')
 df_raw['document_cleaned'] = df_raw['document'].astype(str).map(split_ko_by_jamo)
-df_raw['document_cleaned'][0]
+# df_raw[['document_cleaned']].to_csv(args.corpus_path, index=False, header=False)
+df_train, df_test = train_test_split(df_raw[['document_cleaned']], test_size=args.test_dataset_ratio, random_state=0)
+# df_train.to_csv(args.train_dataset, index=False, header=False)
+# df_test.to_csv(args.test_dataset, index=False, header=False)
+args.train_dataset_lines = df_train.shape[0]
+args.test_dataset_lines = df_test.shape[0]
 
 
 """
 Building vocab
 >>> vocab = WordVocab.load_vocab(args.vocab_path)
 """
-vocab = WordVocab(df_raw['document_cleaned'].values, max_size=args.vocab_size, min_freq=args.min_freq)
-vocab.save_vocab(args.output_path)
-
+# vocab = WordVocab(df_raw['document_cleaned'].values, max_size=args.vocab_size, min_freq=args.min_freq)
+# vocab.save_vocab(args.vocab_path)
+vocab = WordVocab.load_vocab(args.vocab_path)
 print('Vocab size:', len(vocab))
-vocab.save_vocab(args.output_path)
 vocab.freqs
 
+"""
+Bert dataset without NSP
+"""
+train_dataset = CustomBERTDataset(corpus_path=args.train_dataset, vocab=vocab, seq_len=args.seq_len,
+                                  corpus_lines=args.train_dataset_lines, on_memory=True)
+test_dataset = CustomBERTDataset(corpus_path=args.test_dataset, vocab=vocab, seq_len=args.seq_len,
+                                 corpus_lines=args.test_dataset_lines, on_memory=True)
+
+"""
+DataLoader
+"""
+train_data_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.num_workers)
+test_data_loader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=args.num_workers)
+
+"""
+Build model
+"""
+custom_bert = CustomBERT(len(vocab), hidden=args.hidden, n_layers=args.layers, attn_heads=args.attn_heads)
+
+"""
+Trainer
+"""
+trainer = CustomBERTTrainer(
+    bert=custom_bert, vocab_size=len(vocab), train_dataloader=train_data_loader, test_dataloader=test_data_loader,
+    lr=args.lr, betas=(args.adam_beta1, args.adam_beta2), weight_decay=args.adam_weight_decay,
+    with_cuda=args.with_cuda, cuda_devices=args.cuda_devices, log_freq=args.log_freq)
+
+
+"""
+Train
+"""
+for epoch in range(args.epochs):
+    trainer.train(epoch)
+    trainer.save(epoch, args.output_path)
+
+    if test_data_loader is not None:
+        trainer.test(epoch)
+
+
+"""
+etc
+"""
+saved_model = torch.load(args.output_path + '.ep1')
+saved_model.eval()
+type(saved_model)
+
+custom_model = GoodBad(
+    bert=CustomBERT(len(vocab), hidden=args.hidden, n_layers=args.layers, attn_heads=args.attn_heads)
+)
+
+custom_model.bert = saved_model
+
+
+custom_model.forward()

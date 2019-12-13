@@ -69,20 +69,13 @@ class BERTDataset(Dataset):
             if prob < 0.15:
                 prob /= 0.15
 
-                # 80% randomly change token to mask token
-                if prob < 0.8:
+                if prob < 0.8:  # 80% randomly change token to mask token
                     tokens[i] = self.vocab.mask_index
-
-                # 10% randomly change token to random token
-                elif prob < 0.9:
+                elif prob < 0.9:  # 10% randomly change token to random token
                     tokens[i] = random.randrange(len(self.vocab))
-
-                # 10% randomly change token to current token
-                else:
+                else:  # 10% randomly change token to current token
                     tokens[i] = self.vocab.stoi.get(token, self.vocab.unk_index)
-
                 output_label.append(self.vocab.stoi.get(token, self.vocab.unk_index))
-
             else:
                 tokens[i] = self.vocab.stoi.get(token, self.vocab.unk_index)
                 output_label.append(0)
@@ -125,7 +118,7 @@ class BERTDataset(Dataset):
         return line[:-1].split("\t")[1]
 
 
-class CustomDataset(BERTDataset):
+class CustomBERTDataset(BERTDataset):
     def __init__(self, corpus_path, vocab, seq_len, encoding="utf-8", corpus_lines=None, on_memory=True):
         self.vocab = vocab
         self.seq_len = seq_len
@@ -153,35 +146,34 @@ class CustomDataset(BERTDataset):
                 self.random_file.__next__()
 
     def __getitem__(self, item):
-        t1 = self.random_sent(item)
-        t1_random, t1_label = self.random_word(t1)
+        """
+        version without NSP, so there's no segment_label and is_next_label
+        """
+        t1 = self.get_corpus_line(item)
+        t1_random, t1_label = self.random_word(t1)  # num sequence corresponding to masked sentence.
 
-        # [CLS] tag = SOS tag, [SEP] tag = EOS tag
+        # [CLS] tag = SOS(Start Of Sentence) tag, [SEP] tag = EOS(End Of Sentence) tag
+        # SEP: Separator for two sentence, CLS: Binary Classification(is this correct
         t1 = [self.vocab.sos_index] + t1_random + [self.vocab.eos_index]
-        t2 = t2_random + [self.vocab.eos_index]
 
         t1_label = [self.vocab.pad_index] + t1_label + [self.vocab.pad_index]
-        t2_label = t2_label + [self.vocab.pad_index]
 
-        segment_label = ([1 for _ in range(len(t1))] + [2 for _ in range(len(t2))])[:self.seq_len]
-        bert_input = (t1 + t2)[:self.seq_len]
-        bert_label = (t1_label + t2_label)[:self.seq_len]
+        bert_input = t1[:self.seq_len]
+        bert_label = t1_label[:self.seq_len]
 
         padding = [self.vocab.pad_index for _ in range(self.seq_len - len(bert_input))]
-        bert_input.extend(padding), bert_label.extend(padding), segment_label.extend(padding)
+        bert_input.extend(padding), bert_label.extend(padding)
 
         output = {"bert_input": bert_input,
-                  "bert_label": bert_label,
-                  "segment_label": segment_label,
-                  "is_next": is_next_label}
+                  "bert_label": bert_label}
 
         return {key: torch.tensor(value) for key, value in output.items()}
 
     def random_word(self, sentence):
-        return super(CustomDataset, self).random_word(sentence)
+        return super(CustomBERTDataset, self).random_word(sentence)
 
     def random_sent(self, index):
-        raise NotImplemented('Not available when nsp is turned off.')
+        raise NotImplementedError('Not available when NSP is not used.')
 
     def get_corpus_line(self, item):
         if self.on_memory:

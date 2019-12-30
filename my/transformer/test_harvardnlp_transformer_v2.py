@@ -1,3 +1,5 @@
+import tensorflow as tf
+
 from transformer.harvardnlp_transformer import *
 from transformer.harvardnlp_transformer_keras import *
 from transformer.test_config import *
@@ -243,7 +245,9 @@ def test_masked_fill():
     dummy_v_w_v = np.random.rand(batch_size, num_head, max_words_in_sentence, d_v).astype('float32')
     dummy_batch = np.random.randint(low=1, high=max_words_in_sentence, size=(batch_size, max_words_in_sentence))
     dummy_batch = dummy_batch.astype('int64')
+    dummy_batch
     dummy_batch[:, 0] = 1
+    dummy_batch
     pad = 0
 
     # pytorch - scores
@@ -266,7 +270,7 @@ def test_masked_fill():
     src_mask.shape  # (5, 1, 4)
     src_mask = src_mask.unsqueeze(1)
     src_mask.shape  # (5, 1, 1, 4)
-    # (5, 1, 1, 4), each dim represents (batch, head, tokes is sentence(query), tokens in sentence(key))
+    # (5, 1, 1, 4), each dim represents (batch, head, tokens in sentence(query), tokens in sentence(key))
     # dim(2) will be expanded to 4. this means we masking same keys for all query.
     scores_masked_p = scores_p.masked_fill(src_mask == 0, -1e9)
     # torch.mul(scores, (src_mask != 0).float()) + (src_mask == 0).float() * (-1e9)
@@ -293,7 +297,11 @@ def test_masked_fill():
     src_mask.shape
 
     def keras_masked_fill(x, mask, target_mask_val, filled_value=-1e9):
-        return x * (x != target_mask_val) + (mask == target_mask_val) * filled_value
+        mask = tf.dtypes.cast(mask, tf.float32)
+        _tmp1 = tf.dtypes.cast(x != target_mask_val, tf.float32)
+        _tmp2 = tf.dtypes.cast(mask == target_mask_val, tf.float32)
+
+        return x * _tmp1 + _tmp2 * filled_value
 
     scores_masked_k = keras_masked_fill(scores_k, src_mask, 0, -1e9)
     assert np.array_equal(pf(scores_masked_p.numpy()), pf(K.eval(scores_masked_k)))
@@ -733,7 +741,7 @@ def test_greedy_decode():
     print(greedy_decode_p(model, src, src_mask, max_len=10, start_symbol=1))
 
 
-def test_k_transformer():
+def test_k_transformer1():
     trf_block = Transformer(
         d_model=512,
         src_vocab=100,
@@ -757,4 +765,25 @@ def test_k_transformer():
     )
 
 
-test_k_transformer()
+def test_k_transformer2():
+    """
+    >>> test_k_transformer2()
+    """
+    trf_block = Transformer(
+        d_model=512,
+        src_vocab=100,
+        trg_vocab=100,
+        dropout_rate=0.1,
+        num_coder_blocks=2,
+        num_heads=4,
+        d_ff=1024
+    )
+    ge = GeneratorK(d_model=512, vocab=100)
+
+    model = Sequential([
+        trf_block
+    ])
+
+    # model.build(input_shape=[[None, 12], [None, 12], [None, 12], [None, 12]])
+    model.build(input_shape=[12, 12, 12, 12])
+

@@ -75,7 +75,8 @@ class PositionalEncodingK(Layer):
         self.pe = np.expand_dims(pe, 0)
 
     def call(self, x):
-        x = x + K.constant(self.pe[:, :x.shape[1].value])
+        # x = x + K.constant(self.pe[:, :x.shape[1].value])
+        x = x + K.constant(self.pe[:, :x.shape[1]])
         return self.dropout(x)
 
     def compute_output_shape(self, input_shape):
@@ -356,7 +357,8 @@ class MultiHeadedAttentionK(Layer):
 
 
 class SublayerConnectionK(Layer):
-    def __init__(self, size, sublayer, dropout):
+    # def __init__(self, size, sublayer, dropout):
+    def __init__(self, size, dropout):
         """
 
         Parameters
@@ -367,10 +369,10 @@ class SublayerConnectionK(Layer):
         super(SublayerConnectionK, self).__init__()
         self.norm = LayerNormK(features=size)
         self.dropout = Dropout(rate=dropout)
-        self.sublayer = sublayer
+        # self.sublayer = sublayer
 
-    def call(self, x):
-        return x + self.dropout(self.sublayer(self.norm(x)))
+    def call(self, x, sublayer):
+        return x + self.dropout(sublayer(self.norm(x)))
 
 
 class PositionwiseFeedForwardK(Layer):
@@ -400,7 +402,6 @@ class Transformer(Layer):
     >>> model.compile(
         optimizer=Adam(
     )
-
     """
 
     def __init__(self, d_model, src_vocab, trg_vocab, dropout_rate, num_coder_blocks, num_heads, d_ff):
@@ -420,48 +421,62 @@ class Transformer(Layer):
         assert len(input_shape) == 4
         src_shape, trg_shape, src_mask_shape, trg_mask_shape = input_shape
         self.input_spec = [
-            InputSpec(shape=src_shape),
-            InputSpec(shape=trg_shape),
-            InputSpec(shape=src_mask_shape),
-            InputSpec(shape=trg_mask_shape)
+            InputSpec(shape=(src_shape, None)),
+            InputSpec(shape=(trg_shape, None)),
+            InputSpec(shape=(src_mask_shape, None)),
+            InputSpec(shape=(trg_mask_shape, None))
         ]
 
         self.src_emb_layer = EmbeddingsK(d_model=self.d_model, vocab=self.src_vocab)
-        self.src_pe = PositionalEncodingK(d_model=self.d_model, dropout=self.dropout_rate)
+        self.src_pe = PositionalEncodingK(d_model=self.d_model, dropout_rate=self.dropout_rate)
 
         self.encoder_mha_list = [
-            MultiHeadedAttentionK(h=self.num_head, d_model=self.d_model, dropout=self.dropout_rate)
-            for _ in self.num_coder_blocks
-        ]
-
-        self.encoder_slc_list = [
-            SublayerConnectionK(size=self.d_model, dropout=self.dropout_rate)
-            for _ in self.num_coder_blocks * 2
+            MultiHeadedAttentionK(h=self.num_heads, d_model=self.d_model, dropout=self.dropout_rate)
+            for _ in range(self.num_coder_blocks)
         ]
 
         self.encoder_pff_list = [
             PositionwiseFeedForwardK(d_model=self.d_model, d_ff=self.d_ff)
-            for _ in self.num_coder_blocks
+            for _ in range(self.num_coder_blocks)
         ]
+
+        self.encoder_slc_mha_list = [
+            SublayerConnectionK(size=self.d_model, sublayer=encoder_mha, dropout=self.dropout_rate)
+            for encoder_mha in self.encoder_mha_list
+        ]
+
+        self.encoder_slc_pff_list = [
+            SublayerConnectionK(size=self.d_model, sublayer=encoder_pff, dropout=self.dropout_rate)
+            for encoder_pff in self.encoder_pff_list
+        ]
+        # self.encoder_slc_list = [
+        #     SublayerConnectionK(size=self.d_model, sublayer=, dropout=self.dropout_rate)
+        #     for _ in range(self.num_coder_blocks * 2)
+        # ]
 
         self.encoder_layer_norm = LayerNormK(features=d_model)
 
         self.trg_emb_layer = EmbeddingsK(d_model=self.d_model, vocab=self.trg_vocab)
-        self.trg_pe = PositionalEncodingK(d_model=self.d_model, dropout=self.dropout_rate)
+        self.trg_pe = PositionalEncodingK(d_model=self.d_model, dropout_rate=self.dropout_rate)
 
         self.decoder_mha_list = [
-            MultiHeadedAttentionK(h=self.num_head, d_model=self.d_model, dropout=self.dropout_rate)
-            for _ in self.num_coder_blocks * 2
-        ]
-
-        self.decoder_slc_list = [
-            SublayerConnectionK(size=self.d_model, dropout=self.dropout_rate)
-            for _ in self.num_coder_blocks * 3
+            MultiHeadedAttentionK(h=self.num_heads, d_model=self.d_model, dropout=self.dropout_rate)
+            for _ in range(self.num_coder_blocks * 2)
         ]
 
         self.decoder_pff_list = [
             PositionwiseFeedForwardK(d_model=self.d_model, d_ff=self.d_ff)
-            for _ in self.num_coder_blocks
+            for _ in range(self.num_coder_blocks)
+        ]
+
+        self.decoder_slc_mha_list = [
+            SublayerConnectionK(size=self.d_model, sublayer=decoder_mha, dropout=self.dropout_rate)
+            for decoder_mha in self.decoder_mha_list
+        ]
+
+        self.decoder_slc_pff_list = [
+            SublayerConnectionK(size=self.d_model, sublayer=decoder_pff, dropout=self.dropout_rate)
+            for decoder_pff in self.decoder_pff_list
         ]
 
         self.decoder_layer_norm = LayerNormK(features=d_model)
@@ -474,10 +489,9 @@ class Transformer(Layer):
         for i in range(self.num_coder_blocks):
             # multi headed attention and 1st sublayer connection
             self_attn = lambda x: self.encoder_mha_list[i](x, x, x, src_mask)
-            out_slc1 = self.encoder_slc_list[i](x=input_encoder, sublayer=self_attn)
-
+            out_slc1 = self.encoder_slc_mha_list[i](x=input_encoder, sublayer=self_attn)
             # position wise feed forward and 2nd sublayer connection
-            input_encoder = self.encoder_slc_list[i * 2](x=out_slc1, sublayer=self.encoder_pff_list[i])
+            input_encoder = self.encoder_slc_pff_list[i](x=out_slc1, sublayer=self.encoder_pff_list[i])
         output_encoder = self.encoder_layer_norm(input_encoder)
 
         # input to decoder (embedding and positional encoding)
@@ -487,17 +501,105 @@ class Transformer(Layer):
         for j in range(self.num_coder_blocks):
             # sublayer 1 of decoder
             self_attn1 = lambda x: self.decoder_mha_list[j](x, x, x, trg_mask)
-            out_slc1 = self.decoder_slc_list[j](x=input_decoder, sublayer=self_attn1)
-
+            out_slc1 = self.decoder_slc_mha_list[j](x=input_decoder, sublayer=self_attn1)
             # sublayer 2 of decoder
             src_attn2 = lambda x: self.decoder_mha_list[j * 2](x, output_encoder, output_encoder, src_mask)
-            out_slc2 = self.decoder_slc_list[j * 2](x=out_slc1, sublayer=src_attn2)
+            out_slc2 = self.decoder_slc_mha_list[j * 2](x=out_slc1, sublayer=src_attn2)
 
             # position-wise feed-forward and 2nd sublayer connection
-            input_encoder = self.decoder_slc_list[j * 3](x=out_slc2, sublayer=self.decoder_pff_list[j])
+            input_encoder = self.decoder_slc_pff_list[j](x=out_slc2, sublayer=self.decoder_pff_list[j])
         output_decoder = self.decoder_layer_norm(input_encoder)
 
         return output_decoder
+
+
+class TransformerSmall(Layer):
+    """
+    >>> model = Sequential([TransformerSmall(
+        d_model=512,
+        src_vocab=100,
+        dropout_rate=0.1,
+        num_coder_blocks=2,
+        num_heads=4,
+        d_ff=1024
+    )])
+
+    >>> dummy_batch = K.constant(np.random.randint(low=0, high=max_words_in_sentence, size=(batch_size, max_words_in_sentence)))
+    >>> dummy_batch
+    >>> dummy_src_mask = subsequent_mask_k(max_words_in_sentence)
+    >>> dummy_src_mask
+    >>> model([dummy_batch, dummy_src_mask])
+
+    >>> model([12, 12])
+    >>> model.build([12, 12])
+    >>> model.compile(
+        optimizer=Adam(lr=0.002)
+    )
+
+    """
+
+    def __init__(self, d_model, src_vocab, dropout_rate, num_coder_blocks, num_heads, d_ff):
+        super().__init__()
+        self.d_model = d_model
+        self.src_vocab = src_vocab
+        self.dropout_rate = dropout_rate
+        self.num_coder_blocks = num_coder_blocks
+        self.num_heads = num_heads
+        self.d_ff = d_ff
+
+    # noinspection PyAttributeOutsideInit
+    def build(self, input_shape):
+        print('input_shape:', input_shape)
+        # assert isinstance(input_shape, list) and len(input_shape) ==
+        assert len(input_shape) == 2
+        src_shape, src_mask_shape = input_shape
+        self.input_spec = [
+            InputSpec(shape=src_shape),
+            InputSpec(shape=src_mask_shape)
+        ]
+
+        self.src_emb_layer = EmbeddingsK(d_model=self.d_model, vocab=self.src_vocab)
+        self.src_pe = PositionalEncodingK(d_model=self.d_model, dropout_rate=self.dropout_rate)
+
+        self.encoder_mha_list = [
+            MultiHeadedAttentionK(h=self.num_heads, d_model=self.d_model, dropout=self.dropout_rate)
+            for _ in range(self.num_coder_blocks)
+        ]
+
+        self.encoder_pff_list = [
+            PositionwiseFeedForwardK(d_model=self.d_model, d_ff=self.d_ff)
+            for _ in range(self.num_coder_blocks)
+        ]
+
+        self.encoder_slc_mha_list = [
+            SublayerConnectionK(size=self.d_model, dropout=self.dropout_rate)
+            for _ in self.encoder_mha_list
+        ]
+
+        self.encoder_slc_pff_list = [
+            SublayerConnectionK(size=self.d_model, dropout=self.dropout_rate)
+            for _ in self.encoder_pff_list
+        ]
+
+        self.encoder_layer_norm = LayerNormK(features=d_model)
+
+        super().build(input_shape)
+
+    def call(self, src_smask):
+        src, src_mask = src_smask
+        input_encoder = self.src_pe(self.src_emb_layer(src))
+
+        # encoder
+        for i in range(self.num_coder_blocks):
+            # multi headed attention and 1st sublayer connection
+            self_attn = lambda x: self.encoder_mha_list[i]([x, x, x, src_mask])
+            out_slc1 = self.encoder_slc_mha_list[i](input_encoder, sublayer=self_attn)
+            # position wise feed forward and 2nd sublayer connection
+            input_encoder = self.encoder_slc_pff_list[i](x=out_slc1, sublayer=self.encoder_pff_list[i])
+        output_encoder = self.encoder_layer_norm(input_encoder)
+
+        return output_encoder
+
 
 # if __name__ == '__test__':
 #     max_words_in_sentence = 4  # of words in each sentence

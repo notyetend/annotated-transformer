@@ -14,6 +14,7 @@ from bert.attention import AttentionLayer
 from bert.layer import Layer
 
 
+# @residual connection
 class ProjectionLayer(Layer):
     class Params(Layer.Params):
         hidden_size        = None

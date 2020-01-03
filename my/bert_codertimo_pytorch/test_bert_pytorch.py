@@ -20,10 +20,10 @@ import tqdm
 import pandas as pd
 from torch.utils.data.dataloader import DataLoader
 import argparse
-from bert_pytorch.dataset.vocab import WordVocab
-from bert_pytorch.dataset import BERTDataset
-from bert_pytorch.model import BERT
-from bert_pytorch.trainer import BERTTrainer
+from bert_codertimo_pytorch.dataset.vocab import WordVocab
+from bert_codertimo_pytorch.dataset import BERTDataset
+from bert_codertimo_pytorch.model import BERT
+from bert_codertimo_pytorch.trainer import BERTTrainer
 
 """
 Data pre-processing

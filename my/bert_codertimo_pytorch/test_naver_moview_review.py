@@ -6,10 +6,10 @@ import torch
 from torch.utils.data.dataloader import DataLoader
 from sklearn.model_selection import train_test_split
 
-from bert_pytorch.dataset.vocab import WordVocab
-from bert_pytorch.dataset import BERTDataset, CustomBERTDataset
-from bert_pytorch.model import BERT, CustomBERT, CustomBERTLM, GoodBad
-from bert_pytorch.trainer import BERTTrainer, CustomBERTTrainer
+from bert_codertimo_pytorch.dataset.vocab import WordVocab
+from bert_codertimo_pytorch.dataset import BERTDataset, CustomBERTDataset
+from bert_codertimo_pytorch.model import BERT, CustomBERT, CustomBERTLM, GoodBad
+from bert_codertimo_pytorch.trainer import BERTTrainer, CustomBERTTrainer
 
 
 class Args:

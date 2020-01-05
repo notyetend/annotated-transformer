@@ -1,8 +1,8 @@
 import tensorflow as tf
 
-from transformer.harvardnlp_transformer import *
-from transformer.harvardnlp_transformer_keras import *
-from transformer.test_config import *
+from transformer_annotated.harvardnlp_transformer import *
+from transformer_annotated.harvardnlp_transformer_keras import *
+from transformer_annotated.test_config import *
 
 
 def test_positional_encoding():

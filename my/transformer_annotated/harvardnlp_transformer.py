@@ -127,7 +127,7 @@ class SublayerConnectionP(nn.Module):
         But according to below comment
         https://github.com/tensorflow/tensor2tensor/blob/v1.6.5/tensor2tensor/layers/common_hparams.py#L110-L112
         # TODO(noam): The current settings ("", "dan") are the published version
-        # of the transformer.  ("n", "da") seems better for harder-to-learn
+        # of the transformer_annotated.  ("n", "da") seems better for harder-to-learn
         # models, so it should probably be the default.
         and comment below
          https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/layers/common_layers.py
@@ -452,7 +452,7 @@ def make_model_p(src_vocab, tgt_vocab, N=6, d_model=512, d_ff=2048, h=8, dropout
 
     :param src_vocab:
     :param tgt_vocab:
-    :param N:           # of transformer block
+    :param N:           # of transformer_annotated block
     :param d_model:     size of embedding
     :param d_ff:        hidden layer size of the 'Position wize feed forward' unit.
     :param h:           # of heads

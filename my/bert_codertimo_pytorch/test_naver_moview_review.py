@@ -36,7 +36,7 @@ args.encoding = 'utf-8'
 
 # Model settings
 args.hidden = 512
-args.layers = 2  # number of transformer blocks
+args.layers = 2  # number of transformer_annotated blocks
 args.attn_heads = 4
 args.seq_len = 64
 

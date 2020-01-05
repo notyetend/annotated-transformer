@@ -201,7 +201,7 @@ class BertModel(object):
         attention_mask = create_attention_mask_from_input_mask(
             input_ids, input_mask)
 
-        # Run the stacked transformer.
+        # Run the stacked transformer_annotated.
         # `sequence_output` shape = [batch_size, seq_length, hidden_size].
         self.all_encoder_layers = transformer_model(
             input_tensor=self.embedding_output,
@@ -240,7 +240,7 @@ class BertModel(object):
 
     Returns:
       float Tensor of shape [batch_size, seq_length, hidden_size] corresponding
-      to the final hidden of the transformer encoder.
+      to the final hidden of the transformer_annotated encoder.
     """
     return self.sequence_output
 
@@ -248,13 +248,13 @@ class BertModel(object):
     return self.all_encoder_layers
 
   def get_embedding_output(self):
-    """Gets output of the embedding lookup (i.e., input to the transformer).
+    """Gets output of the embedding lookup (i.e., input to the transformer_annotated).
 
     Returns:
       float Tensor of shape [batch_size, seq_length, hidden_size] corresponding
       to the output of the embedding layer, after summing the word
       embeddings with the positional embeddings and the token type embeddings,
-      then performing layer normalization. This is the input to the transformer.
+      then performing layer normalization. This is the input to the transformer_annotated.
     """
     return self.embedding_output
 
@@ -790,7 +790,7 @@ def transformer_model(input_tensor,
   https://arxiv.org/abs/1706.03762
 
   Also see:
-  https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/models/transformer.py
+  https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/models/training.py
 
   Args:
     input_tensor: float Tensor of shape [batch_size, seq_length, hidden_size].

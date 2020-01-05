@@ -126,7 +126,7 @@ class SingleTransformerEncoderLayer(Layer):
     """
     Multi-headed, single layer for the Transformer from 'Attention is All You Need' (arXiv: 1706.03762).
 
-    See also: https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/models/transformer.py
+    See also: https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/models/training.py
     """
 
     class Params(TransformerSelfAttentionLayer.Params,
@@ -186,7 +186,7 @@ class TransformerEncoderLayer(Layer):
 
     Implemented for BERT, with support for ALBERT (sharing encoder layer params).
 
-    See also: https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/models/transformer.py
+    See also: https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/models/training.py
     """
 
     class Params(SingleTransformerEncoderLayer.Params):
@@ -203,7 +203,7 @@ class TransformerEncoderLayer(Layer):
     def build(self, input_shape):
         self.input_spec = keras.layers.InputSpec(shape=input_shape)
 
-        # create all transformer encoder sub-layers
+        # create all transformer_annotated encoder sub-layers
         if self.params.shared_layer:
             # ALBERT: share params
             self.shared_layer = SingleTransformerEncoderLayer.from_params(self.params, name="layer_shared")

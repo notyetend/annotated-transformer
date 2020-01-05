@@ -12,7 +12,7 @@ class TransformerBlock(nn.Module):
 
     def __init__(self, hidden, attn_heads, feed_forward_hidden, dropout):
         """
-        :param hidden: hidden size of transformer
+        :param hidden: hidden size of transformer_annotated
         :param attn_heads: head sizes of multi-head attention
         :param feed_forward_hidden: feed_forward_hidden, usually 4*hidden_size
         :param dropout: dropout rate

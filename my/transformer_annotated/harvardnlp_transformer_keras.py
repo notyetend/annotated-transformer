@@ -25,7 +25,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import backend as K
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import InputSpec
-from transformer.test_config import *
+from transformer_annotated.test_config import *
 
 
 class PositionalEncodingK(Layer):

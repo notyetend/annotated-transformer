@@ -50,7 +50,7 @@ class BertModelLayer(Layer):
             name="embeddings"
         )
 
-        # create all transformer encoder sub-layers
+        # create all transformer_annotated encoder sub-layers
         self.encoders_layer = TransformerEncoderLayer.from_params(
             self.params,
             name="encoder"

@@ -83,7 +83,7 @@ class RawBertTest(unittest.TestCase):
                             steps_per_epoch=100,
                             epochs=100,
                             validation_data=parity_ds_generator(32, max_seq_len),
-                            # TODO: can't change max_seq_len (but transformer alone can)
+                            # TODO: can't change max_seq_len (but transformer_annotated alone can)
                             validation_steps=10,
                             callbacks=[
                                 keras.callbacks.EarlyStopping(monitor='val_sparse_categorical_accuracy', patience=5),

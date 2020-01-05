@@ -1,4 +1,4 @@
-from transformer.harvardnlp_transformer import *
+from transformer_annotated.harvardnlp_transformer import *
 
 
 def data_gen(V, batch, nbatches, max_words_in_sentence):
@@ -75,7 +75,7 @@ def first_example():
         def __init__(self, generator, criterion, opt=None):
             self.generator = generator
             """
-            converter from output of transformer unit to linear and log_softmax
+            converter from output of transformer_annotated unit to linear and log_softmax
             shape converted 
                 from (batch_size, max_words_in_sentence - 1, d_model) 
                 to   (batch_size, max_words_in_sentence - 1, size_dict) 
@@ -88,7 +88,7 @@ def first_example():
 
             Parameters
             ----------
-            x: output of the transformer unit
+            x: output of the transformer_annotated unit
             y: batch.trg_y which has shape of (batch size, 'max number of tokens in sentence' - 1)
             norm: LayerNorm layer
 

@@ -185,14 +185,14 @@ def fetch_tfhub_albert_model(albert_model: str, fetch_dir: str, version="2"):
 def map_to_tfhub_albert_variable_name(name, prefix="bert"):
 
     name = re.compile("encoder/layer_shared/intermediate/(?=kernel|bias)").sub(
-        "encoder/transformer/group_0/inner_group_0/ffn_1/intermediate/dense/", name)
+        "encoder/transformer_annotated/group_0/inner_group_0/ffn_1/intermediate/dense/", name)
     name = re.compile("encoder/layer_shared/output/dense/(?=kernel|bias)").sub(
-        "encoder/transformer/group_0/inner_group_0/ffn_1/intermediate/output/dense/", name)
+        "encoder/transformer_annotated/group_0/inner_group_0/ffn_1/intermediate/output/dense/", name)
 
-    name = name.replace("encoder/layer_shared/output/dense",               "encoder/transformer/group_0/inner_group_0/ffn_1/intermediate/output/dense")
-    name = name.replace("encoder/layer_shared/attention/output/LayerNorm", "encoder/transformer/group_0/inner_group_0/LayerNorm")
-    name = name.replace("encoder/layer_shared/output/LayerNorm", "encoder/transformer/group_0/inner_group_0/LayerNorm_1")
-    name = name.replace("encoder/layer_shared/attention",        "encoder/transformer/group_0/inner_group_0/attention_1")
+    name = name.replace("encoder/layer_shared/output/dense",               "encoder/transformer_annotated/group_0/inner_group_0/ffn_1/intermediate/output/dense")
+    name = name.replace("encoder/layer_shared/attention/output/LayerNorm", "encoder/transformer_annotated/group_0/inner_group_0/LayerNorm")
+    name = name.replace("encoder/layer_shared/output/LayerNorm", "encoder/transformer_annotated/group_0/inner_group_0/LayerNorm_1")
+    name = name.replace("encoder/layer_shared/attention",        "encoder/transformer_annotated/group_0/inner_group_0/attention_1")
 
     name = name.replace("embeddings/word_embeddings_projector/projector",
                         "encoder/embedding_hidden_mapping_in/kernel")

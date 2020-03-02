@@ -29,7 +29,7 @@ class BERT(nn.Module):
         # embedding for BERT, sum of positional, segment, token embeddings
         self.embedding = BERTEmbedding(vocab_size=vocab_size, embed_size=hidden)
 
-        # multi-layers transformer blocks, deep network
+        # multi-layers transformer_annotated blocks, deep network
         self.transformer_blocks = nn.ModuleList(
             [TransformerBlock(hidden, attn_heads, hidden * 4, dropout) for _ in range(n_layers)])
 
@@ -41,7 +41,7 @@ class BERT(nn.Module):
         # embedding the indexed sequence to sequence of vectors
         x = self.embedding(x, segment_info)
 
-        # running over multiple transformer blocks
+        # running over multiple transformer_annotated blocks
         for transformer in self.transformer_blocks:
             x = transformer.forward(x, mask)
 
@@ -73,7 +73,7 @@ class CustomBERT(nn.Module):
         # embedding for BERT, sum of positional, segment, token embeddings
         self.embedding = CustomBERTEmbedding(vocab_size=vocab_size, embed_size=hidden)
 
-        # multi-layers transformer blocks, deep network
+        # multi-layers transformer_annotated blocks, deep network
         self.transformer_blocks = nn.ModuleList(
             [TransformerBlock(hidden, attn_heads, hidden * 4, dropout) for _ in range(n_layers)])
 
@@ -85,7 +85,7 @@ class CustomBERT(nn.Module):
         # embedding the indexed sequence to sequence of vectors
         x = self.embedding(x)
 
-        # running over multiple transformer blocks
+        # running over multiple transformer_annotated blocks
         for transformer in self.transformer_blocks:
             x = transformer.forward(x, mask)
 

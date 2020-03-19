@@ -18,7 +18,6 @@ Question
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 import tensorflow_datasets as tfds
-import joblib
 import tensorflow as tf
 
 import os
@@ -33,36 +32,17 @@ BUFFER_SIZE = 20000
 BATCH_SIZE = 64
 MAX_LENGTH = 40
 
-# train_examples, val_examples = get_raw_data()
-# joblib.dump(train_examples, 'transformer_tutorial_tf2/train_examples.pkl')
-# joblib.dump(val_examples, 'transformer_tutorial_tf2/val_examples.pkl')
-# tokenizer_en, tokenizer_pt = get_tokenizer(train_dataset)
-# joblib.dump(tokenizer_en, 'transformer_tutorial_tf2/tokenizer_en.pkl')
-# joblib.dump(tokenizer_pt, 'transformer_tutorial_tf2/tokenizer_pt.pkl')
-train_examples = joblib.load('transformer_tutorial_tf2/train_examples.pkl')
-val_examples = joblib.load('transformer_tutorial_tf2/val_examples.pkl')
-tokenizer_en = joblib.load('transformer_tutorial_tf2/tokenizer_en.pkl')
-tokenizer_pt = joblib.load('transformer_tutorial_tf2/tokenizer_pt.pkl')
+examples, metadata = tfds.load('ted_hrlr_translate/pt_to_en', with_info=True, as_supervised=True)
+train_examples, val_examples = examples['train'], examples['validation']
 
 
-def get_raw_data():
-    # Getting dataset
-    examples, metadata = tfds.load('ted_hrlr_translate/pt_to_en', with_info=True, as_supervised=True)
-    train_examples, val_examples = examples['train'], examples['validation']
-    return train_examples, val_examples
+tokenizer_en = tfds.features.text.SubwordTextEncoder.build_from_corpus(
+    (en.numpy() for pt, en in train_examples), target_vocab_size=2 ** 13
+)
 
-
-def get_tokenizer(train_examples):
-    # Tokenize
-    tokenizer_en = tfds.features.text.SubwordTextEncoder.build_from_corpus(
-        (en.numpy() for pt, en in train_examples), target_vocab_size=2 ** 13
-    )
-
-    tokenizer_pt = tfds.features.text.SubwordTextEncoder.build_from_corpus(
-        (pt.numpy() for pt, en in train_examples), target_vocab_size=2 ** 13
-    )
-
-    return tokenizer_en, tokenizer_pt
+tokenizer_pt = tfds.features.text.SubwordTextEncoder.build_from_corpus(
+    (pt.numpy() for pt, en in train_examples), target_vocab_size=2 ** 13
+)
 
 
 def encode(lang1, lang2):
